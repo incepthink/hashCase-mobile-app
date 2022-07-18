@@ -38,6 +38,7 @@ dependencies:
   http: ^0.13.4
   provider: ^6.0.3
   flutter_secure_storage: ^5.0.2
+  web3dart:
   public_address_wallet:
     git:
       url: https://github.com/anishsreenivas82/public_address_wallet.git
