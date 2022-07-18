@@ -6,8 +6,10 @@ import 'package:hash_case/pages/signup.dart';
 import 'package:hash_case/services/api.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
-import 'package:public_address_wallet/public_address_wallet.dart';
+// import 'package:public_address_wallet/public_address_wallet.dart';
+import 'package:web3dart/web3dart.dart';
 
 class MetamaskSignIn extends StatefulWidget {
   const MetamaskSignIn({Key? key}) : super(key: key);
@@ -19,6 +21,7 @@ class MetamaskSignIn extends StatefulWidget {
 class _MetamaskSignInState extends State<MetamaskSignIn> {
   @override
   Widget build(BuildContext context) {
+    var _uri;
     // Future signIn() async {
     // final connector = WalletConnect(
     //   bridge: 'https://bridge.walletconnect.org',
@@ -74,33 +77,123 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
       }
     }
 
-    startConnect(Wallet wallet) async {
-      try {
-        final connector = WalletConnector(
-            AppInfo(name: "Mobile App", url: "https://example.mobile.com"));
-        String address = await connector
-            .publicAddress(wallet: wallet)
-            .catchError((onError) {});
-        await StorageService()
-            .addressStorage
-            .write(key: 'wallet_address', value: address);
+//     startConnect(Wallet wallet) async {
+//       try {
+//         final connector = WalletConnector(
+//             AppInfo(name: "Mobile App", url: "https://example.mobile.com"));
+//         String address = await connector
+//             .publicAddress(wallet: wallet)
+//             .catchError((onError) {});
+//         await StorageService()
+//             .addressStorage
+//             .write(key: 'wallet_address', value: address);
+//         print("first address $address");
+//         API().metamaskLogin(address);
 
-         
+//          final connector1 = WalletConnect(
+//           bridge: 'https://bridge.walletconnect.org',
+//           clientMeta:const PeerMeta(
+//             name: 'WalletConnect',
+//             description: 'WalletConnect Developer App',
+//             url: 'https://walletconnect.org',
+//             icons: [
+//               'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+//             ],
+//           ),
+//         );
+//         final provider = EthereumWalletConnectProvider(connector1);
+//          final sender = EthereumAddress.fromHex(session.accounts[0]);
+// //  final sender =Address.fromAlgorandAddress(address: session.accounts[0]);
 
-        // final dynamic portfolio = await API()
-        //     .postMetamaskID("0x9c5083dd4838e120dbeac44c052179692aa5dac5");
-        print("first address $address");
-        API().metamaskLogin(address);
+//         Navigator.of(context)
+//             .push(MaterialPageRoute(builder: ((context) => const HomePage())));
+//         // Navigator.of(context).push(
+//         //     MaterialPageRoute(builder: ((context) => const HomePage())))
 
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: ((context) => const HomePage())));
-        // Navigator.of(context).push(
-        //     MaterialPageRoute(builder: ((context) => const HomePage())))
+//         return address;
+//       } catch (e) {
+//         throw Future.error(e);
+//       }
+//     }
 
-        return address;
-      } catch (e) {
-        throw Future.error(e);
+    // Future<String> signTransaction(SessionStatus session) async {
+    //   final sender = EthereumAddress.fromHex(session.accounts[0]);
+    //   return sender.toString();
+    // }
+
+    ethereumConnect() async {
+      final connector = WalletConnect(
+        bridge: 'https://bridge.walletconnect.org',
+        clientMeta: const PeerMeta(
+          name: 'WalletConnect',
+          description: 'WalletConnect Developer App',
+          url: 'https://walletconnect.org',
+          icons: [
+            'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+          ],
+        ),
+      );
+      if (!connector.connected) {
+        final session = await connector.createSession(
+            chainId: 4160,
+            onDisplayUri: (uri) {
+              _uri = uri;
+              launchUrl(
+                Uri.parse(uri),
+              );
+            });
       }
+
+      final provider = EthereumWalletConnectProvider(connector);
+      var ses = connector.session.accounts[0];
+      print(ses);
+
+      final sender = EthereumAddress.fromHex(ses);
+      launchUrl(
+        Uri.parse(_uri),
+      );
+      final transaction = Transaction(
+        to: sender,
+        from: sender,
+        // gasPrice: EtherAmount.inWei(BigInt.one),
+        // maxGas: 100000,
+        // value: EtherAmount.fromUnitAndValue(EtherUnit.finney, 1),
+      );
+
+      // final credentials = WalletConnectEthereumCredentials(provider: provider);
+      // Credentials fromHex = EthPrivateKey.fromHex(
+      //     "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
+      // final ethereum = Web3Client(
+      //     'https://eth-mainnet.gateway.pokt.network/v1/5f3453978e354ab992c4da79',
+      //     Client());
+      // final txBytes = await ethereum.signTransaction(fromHex, transaction);
+      // print(txBytes);
+      final message = await API().getToken();
+
+      final signedBytes = await provider.personalSign(
+        message: message, address: ses, password: '',
+        // to: sender.toString(),
+        // from: sender.toString(),
+        // gasPrice: EtherAmount.inWei(BigInt.one),
+        // maxGas: 100000,
+        // value: EtherAmount.fromUnitAndValue(EtherUnit.finney, 1),
+      );
+      // print('testing-----$signedBytes');
+      print('testHere');
+      final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
+      print('verifiedMessage----$verifiedMessage');
+
+      if (verifiedMessage == "Token verified") {
+        API().metamaskLogin(ses);
+      }
+
+      print('session is getting killed?');
+      connector.killSession();
+
+      // Kill the session
+
+      // return txBytes;
+      // }
     }
 
     return Scaffold(
@@ -124,7 +217,9 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
             GestureDetector(
               onTap: () {
                 try {
-                  startConnect(Wallet.metamask);
+                  // _launchUrl();
+                  ethereumConnect();
+                  // startConnect(Wallet.metamask);
                 } catch (e) {
                   _launchUrl();
                 }

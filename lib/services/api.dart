@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class API {
-  Future getToken() async {
+  Future<String> getToken() async {
     final response =
         await http.get(Uri.parse('${Endpoints.baseURL}/user/getToken'));
     if (response.statusCode == 200) {
@@ -16,13 +16,13 @@ class API {
     }
   }
 
-  Future getVerifiedToken(var address, var signature) async {
-    final response = await http.get(
-        Uri.parse('${Endpoints.baseURL}/user/getToken'),
-        headers: {'address': address, 'signature': signature});
+  Future<Object> getVerifiedToken(var address, var signature) async {
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/user/verifyToken'),
+        body: {'address': address, 'signature': signature});
     if (response.statusCode == 200) {
       print(response.body);
-      return response.body;
+      return jsonDecode(response.body)['message'];
     } else {
       print(response.body);
       throw Exception(response.body);
