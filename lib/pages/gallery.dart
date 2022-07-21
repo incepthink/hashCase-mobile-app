@@ -1,10 +1,10 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hash_case/pages/login.dart';
 
 import '../GlobalConstants.dart';
+import 'login.dart';
 
 class GalleryPage extends StatelessWidget {
   GalleryPage({Key? key}) : super(key: key);
@@ -16,75 +16,113 @@ class GalleryPage extends StatelessWidget {
   ];
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 80, 30, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          InkWell(
+    return NestedScrollView(
+      floatHeaderSlivers: true,
+      headerSliverBuilder: (context, innerBoxIsScroller) => [
+        SliverAppBar(
+          flexibleSpace: ClipRRect(
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+              child: ClipRRect(
+                child: Container(
+                  height: MediaQueryData.fromWindow(ui.window).viewPadding.top,
+                ),
+              ),
+            ),
+          ),
+          backgroundColor: Colors.black26,
+          floating: true,
+          // pinned: true,
+          snap: true,
+          leading: SizedBox(),
+          shadowColor: Colors.transparent,
+          title: InkWell(
             onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const LoginPage())),
+              MaterialPageRoute(
+                builder: (context) => const LoginPage(),
+              ),
+            ),
             child: Text(
               'Catalogue',
               style: kTextStyleArcadeClassic.copyWith(fontSize: 32),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            margin: const EdgeInsets.symmetric(vertical: 20),
-            decoration: BoxDecoration(
-              border: Border.all(width: 1.5, color: Colors.white54),
-            ),
-            child: TextField(
-              style: kTextStyleBody,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: SvgPicture.asset(
-                    'assets/icons/search.svg',
+          centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(117),
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 50,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          border: Border.all(width: 1.5, color: Colors.white54),
+                        ),
+                        child: TextField(
+                          style: kTextStyleBody,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 10),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: SvgPicture.asset(
+                                'assets/icons/search.svg',
+                              ),
+                            ),
+                            prefixIconConstraints:
+                                const BoxConstraints(maxHeight: 24),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          cursorColor: Colors.white70,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 17,
+                      ),
+                      Container(
+                        height: 40,
+                        child: ListView.separated(
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: 25),
+                          scrollDirection: Axis.horizontal,
+                          shrinkWrap: true,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Text(
+                              _listFilters[index],
+                              style: kTextStyleBody2,
+                            );
+                          },
+                          itemCount: _listFilters.length,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                prefixIconConstraints: const BoxConstraints(maxHeight: 24),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                  borderSide: BorderSide.none,
-                ),
               ),
-              cursorColor: Colors.white70,
             ),
           ),
-          SizedBox(
-            height: 20,
-            child: ListView.separated(
-              separatorBuilder: (context, index) => const SizedBox(width: 25),
-              scrollDirection: Axis.horizontal,
-              shrinkWrap: true,
-              itemBuilder: (BuildContext context, int index) {
-                return Text(
-                  _listFilters[index],
-                  style: kTextStyleBody2,
-                );
-              },
-              itemCount: _listFilters.length,
-            ),
-          ),
-          const SizedBox(height: 30),
-          Expanded(
-            child: ListView.separated(
-                separatorBuilder: (context, index) => const SizedBox(
-                      height: 20,
-                    ),
-                itemCount: 10,
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 70),
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
+        )
+      ],
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.all(20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
                   return ClipRRect(
                     child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+                      filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
@@ -92,6 +130,7 @@ class GalleryPage extends StatelessWidget {
                         ),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 40, vertical: 20),
+                        margin: const EdgeInsets.symmetric(vertical: 10),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -169,8 +208,11 @@ class GalleryPage extends StatelessWidget {
                       ),
                     ),
                   );
-                }),
-          )
+                },
+                childCount: 20,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -181,9 +223,6 @@ class ProductInfoBuilder extends StatelessWidget {
   const ProductInfoBuilder({
     Key? key,
   }) : super(key: key);
-
-  final String bodyText =
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ex sed ipsum hendrerit posuere semper eu dolor. Vestibulum dapibus metus lectus, vitae ornare tellus commodo ac.';
 
   @override
   Widget build(BuildContext context) {
@@ -198,7 +237,7 @@ class ProductInfoBuilder extends StatelessWidget {
         children: [
           ClipRRect(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 300.0, sigmaY: 300.0),
+              filter: ui.ImageFilter.blur(sigmaX: 300.0, sigmaY: 300.0),
               child: ColorFiltered(
                 colorFilter: ColorFilter.mode(
                     const Color(0xff282828).withOpacity(0.5),
@@ -207,7 +246,7 @@ class ProductInfoBuilder extends StatelessWidget {
                   height: 500,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/vectors/background.png"),
+                      image: AssetImage("assets/images/background.png"),
                       fit: BoxFit.fill,
                     ),
                   ),

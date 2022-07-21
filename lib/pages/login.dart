@@ -29,9 +29,10 @@ class _LoginPageState extends State<LoginPage> {
   void startTimer() {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
-      setState(() {
-        _fromY = [140.0, 160.0][x];
-      });
+      if (mounted)
+        setState(() {
+          _fromY = [140.0, 160.0][x];
+        });
       x = 1 - x;
     });
   }
@@ -48,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("assets/vectors/background.png"),
+                  image: AssetImage("assets/images/background.png"),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -267,23 +268,26 @@ class _LoginPageState extends State<LoginPage> {
                                       MaterialPageRoute(
                                           builder: (context) =>
                                               const LandingPage())),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    decoration: const BoxDecoration(
-                                      color: kColorCta,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(4),
+                                  child: Hero(
+                                    tag: 'third',
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      decoration: const BoxDecoration(
+                                        color: kColorCta,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(4),
+                                        ),
                                       ),
-                                    ),
-                                    width: double.infinity,
-                                    child: Center(
-                                      child: Text(
-                                        'Sign In',
-                                        style:
-                                            kTextStyleH1.copyWith(fontSize: 16),
+                                      width: double.infinity,
+                                      child: Center(
+                                        child: Text(
+                                          'Sign In',
+                                          style: kTextStyleH1.copyWith(
+                                              fontSize: 16),
+                                        ),
                                       ),
                                     ),
                                   ),

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:hash_case/pages/landing.dart';
+import 'package:hash_case/pages/Onboarding/Onboarding1.dart';
 import 'package:hash_case/services/api.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((value) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +25,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: const LandingPage(),
+        home: const OnboardingPage1(),
       ),
     );
   }

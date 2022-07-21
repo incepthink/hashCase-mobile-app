@@ -56,3 +56,8 @@ const LinearGradient kGradientG1 = LinearGradient(colors: [
   0.82,
   1.0
 ]);
+
+const String bodyText =
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ex sed ipsum hendrerit posuere semper eu dolor. Vestibulum dapibus metus lectus, vitae ornare tellus commodo ac.';
+const String ktextOnboarding3 =
+    'NFT Apparel allows brands and projects to add utility to NFTs and on-board their community on Blockchain. Our novel solution allows users to control assets via a Web3 account or Email, and creates NFT Counterparts for Physical Luxury Products.';

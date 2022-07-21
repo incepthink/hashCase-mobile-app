@@ -71,6 +71,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/avatars/
+    - assets/images/
 
   fonts:
     - family: GothamPro

@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hash_case/pages/Gallery.dart';
+import 'package:hash_case/pages/Onboarding/Onboarding1.dart';
 
 import '../GlobalConstants.dart';
+import 'login.dart';
 import 'mynft.dart';
 
 class LandingPage extends StatefulWidget {
@@ -18,6 +20,20 @@ class _LandingPageState extends State<LandingPage> {
   int currentIndex = 0;
   final pageController = PageController();
   _changePageIndex(newIndex) {
+    if (newIndex == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+      );
+    }
+    if (newIndex == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const OnboardingPage1(),
+        ),
+      );
+    }
     setState(() {
       currentIndex = newIndex;
       pageController.animateToPage(newIndex,
@@ -87,7 +103,7 @@ class _LandingPageState extends State<LandingPage> {
               child: Container(
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage("assets/vectors/background.png"),
+                    image: AssetImage("assets/images/background.png"),
                     fit: BoxFit.cover,
                   ),
                 ),
