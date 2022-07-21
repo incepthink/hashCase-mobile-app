@@ -109,4 +109,18 @@ class API {
       throw Exception(response.body);
     }
   }
+
+  Future getServerSideProps() async {
+    final response = await http.get(
+      Uri.parse('${Endpoints.baseURL}/collections/byId/1'),
+    );
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      return jsonDecode(response.body)['contract_address'];
+    } else {
+      print(response.body);
+      throw Exception(response.body);
+    }
+  }
 }
