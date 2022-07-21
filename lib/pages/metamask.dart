@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hash_case/pages/home.dart';
 import 'package:hash_case/pages/signin.dart';
 import 'package:hash_case/pages/signup.dart';
@@ -7,6 +8,7 @@ import 'package:hash_case/services/api.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart';
+import 'package:path/path.dart' show join, dirname;
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 // import 'package:public_address_wallet/public_address_wallet.dart';
 import 'package:web3dart/web3dart.dart';
@@ -17,6 +19,30 @@ class MetamaskSignIn extends StatefulWidget {
   @override
   State<MetamaskSignIn> createState() => _MetamaskSignInState();
 }
+
+_smartContracts() async {
+  // final File abiFile = File(join(
+  //     dirname(Platform.script.path), 'SmartContract/nft_apparel_v2.abi.json'));
+
+  // print(abiFile.path.toString());
+  String abiStringFile =
+      await rootBundle.loadString("SmartContract/nft_apparel_v2.abi.json");
+  // print(abiStringFile);
+  final contractAddr =
+      EthereumAddress.fromHex(await API().getServerSideProps());
+
+  final contract = DeployedContract(
+      ContractAbi.fromJson(abiStringFile, 'MetaCoin'), contractAddr);
+  print(contract);
+  // var jsonAbi = jsonDecode(abiStringFile);
+  // print(jsonAbi);
+  // final abiCode = await abiFile.readAsString();
+  // API().getServerSideProps();
+//   final contract =
+//       DeployedContract(ContractAbi.fromJson(abiCode, 'MetaCoin'), contractAddr);
+}
+
+jsonDecode(String abiStringFile) {}
 
 class _MetamaskSignInState extends State<MetamaskSignIn> {
   @override
@@ -218,7 +244,8 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
               onTap: () {
                 try {
                   // _launchUrl();
-                  ethereumConnect();
+                  // ethereumConnect();
+                  _smartContracts();
                   // startConnect(Wallet.metamask);
                 } catch (e) {
                   _launchUrl();
