@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hash_case/pages/metamask.dart';
+import 'package:hash_case/pages/landing.dart';
 import 'package:hash_case/services/api.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: const MetamaskSignIn(),
+        home: const LandingPage(),
       ),
     );
   }
