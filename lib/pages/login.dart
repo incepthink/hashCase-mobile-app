@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hash_case/GlobalConstants.dart';
 import 'package:hash_case/pages/landing.dart';
+import 'package:hash_case/services/api.dart';
+import 'package:hash_case/services/storageService.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:walletconnect_dart/walletconnect_dart.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,6 +19,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  var _uri;
   late Timer timer;
   final _random = Random();
   int next(int min, int max) => min + _random.nextInt(max - min);
@@ -37,8 +42,69 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  Uri metamaskDownloadLink = Uri.parse("https://metamask.io/download/");
+  void _launchUrl() async {
+    if (!await launchUrl(
+      metamaskDownloadLink,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw 'Could not launch $metamaskDownloadLink';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    _ethereumConnect() async {
+      final connector = WalletConnect(
+        bridge: 'https://bridge.walletconnect.org',
+        clientMeta: const PeerMeta(
+          name: 'WalletConnect',
+          description: 'WalletConnect Developer App',
+          url: 'https://walletconnect.org',
+          icons: [
+            'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+          ],
+        ),
+      );
+      if (!connector.connected) {
+        final session = await connector.createSession(
+            chainId: 4160,
+            onDisplayUri: (uri) {
+              _uri = uri;
+              launchUrl(
+                Uri.parse(uri),
+              );
+            });
+      }
+
+      // signTranaction
+      final provider = EthereumWalletConnectProvider(connector);
+      var ses = connector.session.accounts[0];
+      await StorageService()
+          .JWTStorage
+          .write(key: 'wallet_address', value: ses);
+      launchUrl(
+        Uri.parse(_uri),
+      );
+      final message = await API().getToken();
+      final signedBytes = await provider.personalSign(
+        message: message,
+        address: ses,
+        password: '',
+      );
+      //Getting the verified message
+
+      final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
+      if (verifiedMessage == "Token verified") {
+        await API().metamaskLogin(ses);
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => const LandingPage()));
+      }
+
+      //kil session
+      connector.killSession();
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -292,29 +358,38 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   ),
                                 ),
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: kColorCta.withOpacity(0.2),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(4),
+                                InkWell(
+                                  onTap: () {
+                                    try {
+                                      _ethereumConnect();
+                                    } catch (e) {
+                                      _launchUrl();
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: kColorCta.withOpacity(0.2),
+                                      borderRadius: const BorderRadius.all(
+                                        Radius.circular(4),
+                                      ),
                                     ),
+                                    width: double.infinity,
+                                    child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SvgPicture.asset(
+                                              'assets/icons/metamask-icon.svg'),
+                                          const SizedBox(width: 15),
+                                          Text(
+                                            'Continue with Metamask',
+                                            style: kTextStyleH1.copyWith(
+                                                fontSize: 16),
+                                          ),
+                                        ]),
                                   ),
-                                  width: double.infinity,
-                                  child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SvgPicture.asset(
-                                            'assets/icons/metamask-icon.svg'),
-                                        const SizedBox(width: 15),
-                                        Text(
-                                          'Continue with Metamask',
-                                          style: kTextStyleH1.copyWith(
-                                              fontSize: 16),
-                                        ),
-                                      ]),
                                 ),
                                 Padding(
                                   padding:

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hash_case/pages/home.dart';
+import 'package:hash_case/pages/landing.dart';
 import 'package:hash_case/pages/signin.dart';
 import 'package:hash_case/pages/signup.dart';
 import 'package:hash_case/services/api.dart';
@@ -10,8 +13,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart';
 import 'package:path/path.dart' show join, dirname;
 import 'package:walletconnect_dart/walletconnect_dart.dart';
+import 'package:web3dart/crypto.dart';
+import 'package:web3dart/json_rpc.dart';
+import 'package:web_socket_channel/io.dart';
 // import 'package:public_address_wallet/public_address_wallet.dart';
 import 'package:web3dart/web3dart.dart';
+
+const String rpcUrl = 'http://localhost:7545';
+const String wsUrl = 'ws://localhost:7545';
 
 class MetamaskSignIn extends StatefulWidget {
   const MetamaskSignIn({Key? key}) : super(key: key);
@@ -20,29 +29,53 @@ class MetamaskSignIn extends StatefulWidget {
   State<MetamaskSignIn> createState() => _MetamaskSignInState();
 }
 
-_smartContracts() async {
-  // final File abiFile = File(join(
-  //     dirname(Platform.script.path), 'SmartContract/nft_apparel_v2.abi.json'));
+// Future<String> call1({
+//   EthereumAddress? sender,
+//   required WalletConnect connector,
+//   required DeployedContract contract,
+//   required ContractFunction function,
+//   required List<dynamic> params,
+// }) async {
+//   final result = await connector.sendCustomRequest(
+//     method: 'eth_call',
+//     params: [contract.address.hex, function.encodeCall(params)],
+//   );
 
-  // print(abiFile.path.toString());
+//   return result;
+// }
+
+_smartContracts() async {
   String abiStringFile =
       await rootBundle.loadString("SmartContract/nft_apparel_v2.abi.json");
   // print(abiStringFile);
-  final contractAddr =
-      EthereumAddress.fromHex(await API().getServerSideProps());
+  final contractString = (await API().getServerSideProps())['contract_address'];
+  final contractAddr = EthereumAddress.fromHex(contractString);
 
   final contract = DeployedContract(
-      ContractAbi.fromJson(abiStringFile, 'MetaCoin'), contractAddr);
-  print(contract);
-  // var jsonAbi = jsonDecode(abiStringFile);
-  // print(jsonAbi);
-  // final abiCode = await abiFile.readAsString();
-  // API().getServerSideProps();
-//   final contract =
-//       DeployedContract(ContractAbi.fromJson(abiCode, 'MetaCoin'), contractAddr);
-}
+      ContractAbi.fromJson(abiStringFile, 'NftApparel'), contractAddr);
+  // print(contract);
+  final tokensOfOwner = contract.function('tokensOfOwner');
+  var httpClient = Client();
+  var ethClient = Web3Client('https://polygon-rpc.com', httpClient);
+  var credentials = EthPrivateKey.fromHex(
+      "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
+  var address = await credentials.extractAddress();
+  var tokens = await ethClient
+      .call(contract: contract, function: tokensOfOwner, params: [
+    // EthereumAddress.fromHex('0x6aa93c6c9cb7adccfbef84a91a29d3be5379f72e')
+    address
+  ]);
 
-jsonDecode(String abiStringFile) {}
+  print('testing--${tokens}');
+  var contractId = (await API().getServerSideProps())['id'];
+  print(contractId);
+  var mappedToken = tokens[0]
+      .map((e) => {'contract_id': contractId.toInt(), 'id': e.toInt()})
+      .toList();
+  print(mappedToken);
+
+  var walletNFTs = await API().onWalletNfts(mappedToken);
+}
 
 class _MetamaskSignInState extends State<MetamaskSignIn> {
   @override
@@ -103,50 +136,6 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
       }
     }
 
-//     startConnect(Wallet wallet) async {
-//       try {
-//         final connector = WalletConnector(
-//             AppInfo(name: "Mobile App", url: "https://example.mobile.com"));
-//         String address = await connector
-//             .publicAddress(wallet: wallet)
-//             .catchError((onError) {});
-//         await StorageService()
-//             .addressStorage
-//             .write(key: 'wallet_address', value: address);
-//         print("first address $address");
-//         API().metamaskLogin(address);
-
-//          final connector1 = WalletConnect(
-//           bridge: 'https://bridge.walletconnect.org',
-//           clientMeta:const PeerMeta(
-//             name: 'WalletConnect',
-//             description: 'WalletConnect Developer App',
-//             url: 'https://walletconnect.org',
-//             icons: [
-//               'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
-//             ],
-//           ),
-//         );
-//         final provider = EthereumWalletConnectProvider(connector1);
-//          final sender = EthereumAddress.fromHex(session.accounts[0]);
-// //  final sender =Address.fromAlgorandAddress(address: session.accounts[0]);
-
-//         Navigator.of(context)
-//             .push(MaterialPageRoute(builder: ((context) => const HomePage())));
-//         // Navigator.of(context).push(
-//         //     MaterialPageRoute(builder: ((context) => const HomePage())))
-
-//         return address;
-//       } catch (e) {
-//         throw Future.error(e);
-//       }
-//     }
-
-    // Future<String> signTransaction(SessionStatus session) async {
-    //   final sender = EthereumAddress.fromHex(session.accounts[0]);
-    //   return sender.toString();
-    // }
-
     ethereumConnect() async {
       final connector = WalletConnect(
         bridge: 'https://bridge.walletconnect.org',
@@ -170,56 +159,30 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
             });
       }
 
+      // signTranaction
       final provider = EthereumWalletConnectProvider(connector);
       var ses = connector.session.accounts[0];
-      print(ses);
-
-      final sender = EthereumAddress.fromHex(ses);
+      await StorageService()
+          .JWTStorage
+          .write(key: 'wallet_address', value: ses);
       launchUrl(
         Uri.parse(_uri),
       );
-      final transaction = Transaction(
-        to: sender,
-        from: sender,
-        // gasPrice: EtherAmount.inWei(BigInt.one),
-        // maxGas: 100000,
-        // value: EtherAmount.fromUnitAndValue(EtherUnit.finney, 1),
-      );
-
-      // final credentials = WalletConnectEthereumCredentials(provider: provider);
-      // Credentials fromHex = EthPrivateKey.fromHex(
-      //     "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
-      // final ethereum = Web3Client(
-      //     'https://eth-mainnet.gateway.pokt.network/v1/5f3453978e354ab992c4da79',
-      //     Client());
-      // final txBytes = await ethereum.signTransaction(fromHex, transaction);
-      // print(txBytes);
       final message = await API().getToken();
-
       final signedBytes = await provider.personalSign(
-        message: message, address: ses, password: '',
-        // to: sender.toString(),
-        // from: sender.toString(),
-        // gasPrice: EtherAmount.inWei(BigInt.one),
-        // maxGas: 100000,
-        // value: EtherAmount.fromUnitAndValue(EtherUnit.finney, 1),
+        message: message,
+        address: ses,
+        password: '',
       );
-      // print('testing-----$signedBytes');
-      print('testHere');
-      final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
-      print('verifiedMessage----$verifiedMessage');
+      //Getting the verified message
 
+      final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
       if (verifiedMessage == "Token verified") {
-        API().metamaskLogin(ses);
+        await API().metamaskLogin(ses);
       }
 
-      print('session is getting killed?');
+      //kil session
       connector.killSession();
-
-      // Kill the session
-
-      // return txBytes;
-      // }
     }
 
     return Scaffold(

@@ -97,6 +97,30 @@ class API {
     }
   }
 
+  Future onWalletNfts(var token) async {
+    // var userId = await StorageService().userStorage.read(key: 'user');
+    // var jwtToken = await StorageService().userStorage.read(key: 'JWT');
+    print('is this here');
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization':
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiaWF0IjoxNjU4NTkyNzY0fQ.AM4mXIgB9YsqvDv26rLJI_-kMZWuOi5EMGPbYDCUMZw',
+        },
+        body: jsonEncode(token));
+
+    if (response.statusCode == 200) {
+      print('entered');
+      print(response.body);
+      return jsonDecode(response.body);
+    } else {
+      print('entered else');
+      print(response.statusCode);
+      throw Exception(response.body);
+    }
+  }
+
   Future getCollections() async {
     final response = await http.get(
       Uri.parse('${Endpoints.baseURL}/collections/'),
@@ -117,7 +141,7 @@ class API {
 
     if (response.statusCode == 200) {
       print(response.body);
-      return jsonDecode(response.body)['contract_address'];
+      return jsonDecode(response.body);
     } else {
       print(response.body);
       throw Exception(response.body);
