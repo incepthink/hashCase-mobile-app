@@ -17,28 +17,43 @@ class OnboardingPage2 extends StatefulWidget {
 }
 
 class _OnboardingPage2State extends State<OnboardingPage2> {
-  double _fromY = 100;
+  double _fromY = 90;
   late Timer timer;
   int x = 0;
   final _animationDuration = const Duration(milliseconds: 3000);
   @override
   void initState() {
-    startTimer();
     super.initState();
+    startTimer();
+  }
+
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 
   void startTimer() {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
-        _fromY = [90.0, 110.0][x];
+        _fromY = [_fromY - 10, _fromY + 10][x];
       });
       x = 1 - x;
     });
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('Onboarding2');
+
     final size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.black,
@@ -70,7 +85,6 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
             ),
             AnimatedPositioned(
               curve: Curves.linear,
-              left: 60,
               top: _fromY,
               duration: _animationDuration,
               child: ColorFiltered(
@@ -89,9 +103,9 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
               ),
             ),
             Positioned(
-              height: 265,
+              // height: 265,
               width: size.width * 0.95,
-              bottom: 60,
+              bottom: 10,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(25, 30, 25, 0),
                 child: Column(
@@ -110,7 +124,7 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
                       bodyText.split('').reversed.join(),
                       style: kTextStyleBody,
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -118,35 +132,29 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
                           tag: 'first',
                           child: Material(
                             color: Colors.transparent,
-                            child: ClipRRect(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                    sigmaX: 20.0, sigmaY: 20.0),
-                                child: Container(
-                                  // width: 70,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  padding:
-                                      const EdgeInsets.fromLTRB(20, 15, 50, 15),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0x3300C2FF),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(4),
-                                    ),
+                            child: Container(
+                              // width: 70,
+                              margin: const EdgeInsets.symmetric(vertical: 16),
+                              padding:
+                                  const EdgeInsets.fromLTRB(20, 15, 50, 15),
+                              decoration: const BoxDecoration(
+                                color: Color(0x3300C2FF),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              // width: double.infinity,
+                              child: Center(
+                                child: InkWell(
+                                  onTap: () =>
+                                      Navigator.of(context).pushReplacement(
+                                    animatedRoute(
+                                        const OnboardingPage1(),
+                                        RouteType.LEFT_TO_RIGHT,
+                                        const Duration(milliseconds: 700)),
                                   ),
-                                  // width: double.infinity,
-                                  child: Center(
-                                    child: InkWell(
-                                      onTap: () => Navigator.of(context).push(
-                                        animatedRoute(
-                                            const OnboardingPage1(),
-                                            RouteType.LEFT_TO_RIGHT,
-                                            const Duration(milliseconds: 700)),
-                                      ),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/arrow_left_round.svg',
-                                      ),
-                                    ),
+                                  child: SvgPicture.asset(
+                                    'assets/icons/arrow_left_round.svg',
                                   ),
                                 ),
                               ),
@@ -157,35 +165,28 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
                           tag: 'second',
                           child: Material(
                             color: Colors.transparent,
-                            child: ClipRRect(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                    sigmaX: 20.0, sigmaY: 20.0),
-                                child: Container(
-                                  // width: 70,
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  padding:
-                                      const EdgeInsets.fromLTRB(50, 15, 20, 15),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0x3300C2FF),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(4),
-                                    ),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 16),
+                              padding:
+                                  const EdgeInsets.fromLTRB(50, 15, 20, 15),
+                              decoration: const BoxDecoration(
+                                color: kColorCta,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              // width: double.infinity,
+                              child: Center(
+                                child: InkWell(
+                                  onTap: () =>
+                                      Navigator.of(context).pushReplacement(
+                                    animatedRoute(
+                                        const OnboardingPage3(),
+                                        RouteType.RIGHT_TO_LEFT,
+                                        const Duration(milliseconds: 700)),
                                   ),
-                                  // width: double.infinity,
-                                  child: Center(
-                                    child: InkWell(
-                                      onTap: () => Navigator.of(context).push(
-                                        animatedRoute(
-                                            const OnboardingPage3(),
-                                            RouteType.RIGHT_TO_LEFT,
-                                            const Duration(milliseconds: 700)),
-                                      ),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/arrow_right_round.svg',
-                                      ),
-                                    ),
+                                  child: SvgPicture.asset(
+                                    'assets/icons/arrow_right_round.svg',
                                   ),
                                 ),
                               ),

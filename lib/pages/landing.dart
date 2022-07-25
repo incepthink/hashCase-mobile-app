@@ -6,6 +6,7 @@ import 'package:hash_case/pages/Gallery.dart';
 import 'package:hash_case/pages/Onboarding/Onboarding1.dart';
 
 import '../GlobalConstants.dart';
+import '../services/api.dart';
 import 'login.dart';
 import 'mynft.dart';
 
@@ -21,24 +22,36 @@ class _LandingPageState extends State<LandingPage> {
   final pageController = PageController();
   _changePageIndex(newIndex) {
     if (newIndex == 2) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ),
-      );
+      // Navigator.of(context).push(
+      //   MaterialPageRoute(
+      //     builder: (context) => const LoginPage(),
+      //   ),
+      // );
+      return;
     }
     if (newIndex == 3) {
+      final api = API();
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => const OnboardingPage1(),
         ),
       );
+      api.signOut();
+      return;
     }
     setState(() {
       currentIndex = newIndex;
       pageController.animateToPage(newIndex,
           curve: Curves.ease, duration: const Duration(milliseconds: 200));
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final api = API();
+    api.getCollections();
+    api.fetchLocalNfts();
   }
 
   @override

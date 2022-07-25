@@ -2,18 +2,39 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hash_case/HiveDB/UserData/UserData.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../GlobalConstants.dart';
+import '../HiveDB/NFT/HcNFT.dart';
+import '../HiveDB/NFT/HcNFTList.dart';
+import '../services/api.dart';
 import 'login.dart';
 
-class GalleryPage extends StatelessWidget {
+class GalleryPage extends StatefulWidget {
   GalleryPage({Key? key}) : super(key: key);
+
+  @override
+  State<GalleryPage> createState() => _GalleryPageState();
+}
+
+class _GalleryPageState extends State<GalleryPage> {
+  final globalBox = Hive.box('globalBox');
+
   final List<String> _listFilters = [
     'Popular',
     'Latest',
     'Sneakers',
     '3D',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final api = API();
+    api.getCollections();
+  }
+
   @override
   Widget build(BuildContext context) {
     return NestedScrollView(
@@ -21,27 +42,31 @@ class GalleryPage extends StatelessWidget {
       headerSliverBuilder: (context, innerBoxIsScroller) => [
         SliverAppBar(
           flexibleSpace: ClipRRect(
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
-              child: ClipRRect(
-                child: Container(
-                  height: MediaQueryData.fromWindow(ui.window).viewPadding.top,
-                ),
-              ),
+            child: Container(
+              height: MediaQueryData.fromWindow(ui.window).viewPadding.top,
             ),
           ),
-          backgroundColor: Colors.black26,
+          backgroundColor: Colors.transparent,
           floating: true,
           // pinned: true,
-          snap: true,
+          // snap: true,
           leading: SizedBox(),
           shadowColor: Colors.transparent,
           title: InkWell(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const LoginPage(),
-              ),
-            ),
+            onTap: () async {
+              // Navigator.of(context).push(
+              //   MaterialPageRoute(
+              //     builder: (context) => const LoginPage(),
+              //   ),
+              // );
+              final api = API();
+              await api.getCollections();
+              // await api.fetchLocalNfts();
+              // final globalBox = Hive.box('globalBox');
+              // UserData userData = globalBox.get('userData');
+              // final myNFTList = userData.myNFTList;
+              // print(myNFTList);
+            },
             child: Text(
               'Catalogue',
               style: kTextStyleArcadeClassic.copyWith(fontSize: 32),
@@ -51,61 +76,58 @@ class GalleryPage extends StatelessWidget {
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(117),
             child: ClipRRect(
-              child: BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 50,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        decoration: BoxDecoration(
-                          border: Border.all(width: 1.5, color: Colors.white54),
-                        ),
-                        child: TextField(
-                          style: kTextStyleBody,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 10),
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: SvgPicture.asset(
-                                'assets/icons/search.svg',
-                              ),
-                            ),
-                            prefixIconConstraints:
-                                const BoxConstraints(maxHeight: 24),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15.0),
-                              borderSide: BorderSide.none,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                child: Column(
+                  children: [
+                    Container(
+                      height: 50,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 1.5, color: Colors.white54),
+                      ),
+                      child: TextField(
+                        style: kTextStyleBody,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 10),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: SvgPicture.asset(
+                              'assets/icons/search.svg',
                             ),
                           ),
-                          cursorColor: Colors.white70,
+                          prefixIconConstraints:
+                              const BoxConstraints(maxHeight: 24),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
+                        cursorColor: Colors.white70,
                       ),
-                      SizedBox(
-                        height: 17,
+                    ),
+                    const SizedBox(
+                      height: 17,
+                    ),
+                    Container(
+                      height: 40,
+                      child: ListView.separated(
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 25),
+                        scrollDirection: Axis.horizontal,
+                        shrinkWrap: true,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Text(
+                            _listFilters[index],
+                            style: kTextStyleBody2,
+                          );
+                        },
+                        itemCount: _listFilters.length,
                       ),
-                      Container(
-                        height: 40,
-                        child: ListView.separated(
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(width: 25),
-                          scrollDirection: Axis.horizontal,
-                          shrinkWrap: true,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Text(
-                              _listFilters[index],
-                              style: kTextStyleBody2,
-                            );
-                          },
-                          itemCount: _listFilters.length,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -117,101 +139,31 @@ class GalleryPage extends StatelessWidget {
         slivers: [
           SliverPadding(
             padding: EdgeInsets.all(20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return ClipRRect(
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          border: Border.all(width: 1.5, color: Colors.white54),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 20),
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'assets/avatars/avatar${index % 2 + 1}.png',
-                                  height: 200,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              '#1178 Bobble Headz',
-                              style: kTextStyleH1,
-                            ),
-                            Row(
-                              children: const [
-                                Text(
-                                  'BobbleHeadz',
-                                  style: kTextStyleSecondary,
-                                ),
-                                Icon(
-                                  Icons.verified,
-                                  color: Colors.greenAccent,
-                                  size: 12,
-                                )
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      context: context,
-                                      enableDrag: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (BuildContext context) {
-                                        return const ProductInfoBuilder();
-                                      },
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 50, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          width: 1.5, color: Colors.white54),
-                                    ),
-                                    child: const Text(
-                                      'Details',
-                                      style: kTextStyleBody2,
-                                    ),
-                                  ),
-                                ),
-                                Row(children: [
-                                  Text(
-                                    '68',
-                                    style: kTextStyleBody2.copyWith(
-                                        color: Colors.white54),
-                                  ),
-                                  const Icon(
-                                    Icons.favorite,
-                                    color: Colors.redAccent,
-                                  )
-                                ])
-                              ],
-                            )
-                          ],
-                        ),
+            sliver: ValueListenableBuilder(
+                valueListenable: globalBox.listenable(keys: ['HcNFTs']),
+                builder: (context, Box<dynamic> box, _) {
+                  final HcNFTList hcNFTList = box.get('HcNFTs');
+                  final displayList = hcNFTList.hcNFTList;
+                  if (displayList.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: SizedBox(
+                        child: CircularProgressIndicator(),
+                        height: 30,
                       ),
+                    );
+                  }
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return HcNFTCard(
+                          hcNFT: displayList[index],
+                        );
+                      },
+                      childCount: displayList.length,
                     ),
                   );
-                },
-                childCount: 20,
-              ),
-            ),
+                }),
           ),
         ],
       ),
@@ -219,11 +171,125 @@ class GalleryPage extends StatelessWidget {
   }
 }
 
-class ProductInfoBuilder extends StatelessWidget {
-  const ProductInfoBuilder({
+class HcNFTCard extends StatelessWidget {
+  const HcNFTCard({
     Key? key,
+    required this.hcNFT,
   }) : super(key: key);
+  final HcNFT hcNFT;
+  @override
+  Widget build(BuildContext context) {
+    print(hcNFT.image);
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            border: Border.all(width: 1.5, color: Colors.white54),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Image.network(
+                  //   hcNFT.image,
+                  //   height: 200,
+                  // ),
+                  Image.asset(
+                    'assets/avatars/avatar1.png',
+                    height: 200,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                hcNFT.name,
+                style: kTextStyleH1,
+              ),
+              Row(
+                children: [
+                  Text(
+                    hcNFT.contractAddress,
+                    style: kTextStyleSecondary,
+                  ),
+                  // Text(
+                  //   'BobbleHeadz',
+                  //   style: kTextStyleSecondary,
+                  // ),
+                  Icon(
+                    Icons.verified,
+                    color: Colors.greenAccent,
+                    size: 12,
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        context: context,
+                        enableDrag: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (BuildContext context) {
+                          return ProductInfoBuilder(
+                            title: hcNFT.name,
+                            imageUrl: hcNFT.image,
+                            description: hcNFT.toString(),
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(width: 1.5, color: Colors.white54),
+                      ),
+                      child: const Text(
+                        'Details',
+                        style: kTextStyleBody2,
+                      ),
+                    ),
+                  ),
+                  Row(children: [
+                    Text(
+                      '68',
+                      style: kTextStyleBody2.copyWith(color: Colors.white54),
+                    ),
+                    const Icon(
+                      Icons.favorite,
+                      color: Colors.redAccent,
+                    )
+                  ])
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
+class ProductInfoBuilder extends StatelessWidget {
+  ProductInfoBuilder({
+    Key? key,
+    this.imageUrl,
+    required this.title,
+    required this.description,
+  }) : super(key: key);
+  final String description;
+  final String? imageUrl;
+  final String title;
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -243,7 +309,7 @@ class ProductInfoBuilder extends StatelessWidget {
                     const Color(0xff282828).withOpacity(0.5),
                     BlendMode.srcOver),
                 child: Container(
-                  height: 500,
+                  height: 600,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage("assets/images/background.png"),
@@ -259,6 +325,7 @@ class ProductInfoBuilder extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   height: 4,
@@ -272,17 +339,23 @@ class ProductInfoBuilder extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SvgPicture.asset('assets/icons/arrow.svg'),
-                    const Text(
-                      '#1178 BobbleHeadz',
+                    Text(
+                      title,
                       style: kTextStyleH1,
                     ),
                     SvgPicture.asset('assets/icons/bookmark_filled.svg')
                   ],
                 ),
-                Image.asset(
-                  'assets/avatars/avatar3.png',
-                  height: 200,
-                ),
+                if (["", '-', null].contains(imageUrl))
+                  Image.asset(
+                    'assets/avatars/avatar3.png',
+                    height: 200,
+                  ),
+                if (!["", '-', null].contains(imageUrl))
+                  Image.network(
+                    imageUrl!,
+                    height: 200,
+                  ),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -306,10 +379,10 @@ class ProductInfoBuilder extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 20,
                 ),
                 Text(
-                  bodyText,
+                  description,
                   style: kTextStyleSecondary,
                 ),
                 const SizedBox(

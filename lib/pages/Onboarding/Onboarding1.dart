@@ -14,25 +14,33 @@ class OnboardingPage1 extends StatefulWidget {
 }
 
 class _OnboardingPage1State extends State<OnboardingPage1> {
-  double _fromY = 100;
+  double _fromY = 90;
   late Timer timer;
   final _animationDuration = const Duration(milliseconds: 3000);
   @override
   void initState() {
-    startTimer();
     super.initState();
+    startTimer();
   }
 
   @override
   void dispose() {
     super.dispose();
+    timer.cancel();
+  }
+
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
   }
 
   void startTimer() {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
-        _fromY = [90.0, 110.0][x];
+        _fromY = [_fromY - 10, _fromY + 10][x];
       });
       x = 1 - x;
     });
@@ -41,6 +49,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    print('Onboarding1');
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -71,7 +80,6 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
             ),
             AnimatedPositioned(
               curve: Curves.linear,
-              left: 60,
               top: _fromY,
               duration: _animationDuration,
               child: ColorFiltered(
@@ -90,9 +98,9 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
               ),
             ),
             Positioned(
-              height: 300,
+              // height: 300,
               width: size.width * 0.95,
-              bottom: 60,
+              bottom: 10,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(25, 30, 25, 0),
                 child: Column(
@@ -150,7 +158,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
                       bodyText,
                       style: kTextStyleBody,
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 15),
                     Hero(
                       tag: 'first',
                       child: Material(
@@ -167,7 +175,8 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
                           // width: double.infinity,
                           child: Center(
                             child: InkWell(
-                              onTap: () => Navigator.of(context).push(
+                              onTap: () =>
+                                  Navigator.of(context).pushReplacement(
                                 animatedRoute(
                                     const OnboardingPage2(),
                                     RouteType.RIGHT_TO_LEFT,
