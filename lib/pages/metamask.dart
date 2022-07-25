@@ -162,9 +162,7 @@ class _MetamaskSignInState extends State<MetamaskSignIn> {
       // signTranaction
       final provider = EthereumWalletConnectProvider(connector);
       var ses = connector.session.accounts[0];
-      await StorageService()
-          .JWTStorage
-          .write(key: 'wallet_address', value: ses);
+      await StorageService.JWTStorage.write(key: 'wallet_address', value: ses);
       launchUrl(
         Uri.parse(_uri),
       );

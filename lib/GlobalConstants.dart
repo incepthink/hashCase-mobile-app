@@ -61,3 +61,10 @@ const String bodyText =
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris et ex sed ipsum hendrerit posuere semper eu dolor. Vestibulum dapibus metus lectus, vitae ornare tellus commodo ac.';
 const String ktextOnboarding3 =
     'NFT Apparel allows brands and projects to add utility to NFTs and on-board their community on Blockchain. Our novel solution allows users to control assets via a Web3 account or Email, and creates NFT Counterparts for Physical Luxury Products.';
+
+//Hive Type IDs
+const int kUSERDATA = 0;
+const int kNFT = 1;
+const int kHcNFT = 2;
+const int kHcNFTList = 3;
+const int kMerchandise = 4;
