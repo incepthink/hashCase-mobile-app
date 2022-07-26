@@ -27,6 +27,7 @@ class _MyNFTsState extends State<MyNFTs> {
   _getData() async {
     isLoading.value = true;
     await API().fetchLocalNfts();
+    await API().onWalletNfts();
     isLoading.value = false;
   }
 

@@ -74,7 +74,7 @@ _smartContracts() async {
       .toList();
   print(mappedToken);
 
-  var walletNFTs = await API().onWalletNfts(mappedToken);
+  var walletNFTs = await API().onWalletNfts();
 }
 
 class _MetamaskSignInState extends State<MetamaskSignIn> {

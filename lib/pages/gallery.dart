@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hash_case/HiveDB/UserData/UserData.dart';
+import 'package:hash_case/services/smartContractFunctions.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../GlobalConstants.dart';
@@ -59,22 +60,23 @@ class _GalleryPageState extends State<GalleryPage> {
               //     builder: (context) => const LoginPage(),
               //   ),
               // );
-              final api = API();
+              // final api = API();
               // await api.getCollections();
               // await api.fetchLocalNfts();
               // final globalBox = Hive.box('globalBox');
               // UserData userData = globalBox.get('userData');
               // final myNFTList = userData.myNFTList;
               // print(myNFTList);
-              List<dynamic> data = [
-                {"id": 1, "contract_id": 1},
-                {"id": 2, "contract_id": 1},
-                {"id": 3, "contract_id": 1},
-                {"id": 4, "contract_id": 1},
-                {"id": 5, "contract_id": 1},
-                {"id": 6, "contract_id": 1}
-              ];
-              await api.onWalletNfts(data);
+              // List<dynamic> data = [
+              //   {"id": 1, "contract_id": 1},
+              //   {"id": 2, "contract_id": 1},
+              //   {"id": 3, "contract_id": 1},
+              //   {"id": 4, "contract_id": 1},
+              //   {"id": 5, "contract_id": 1},
+              //   {"id": 6, "contract_id": 1}
+              // ];
+              // await api.onWalletNfts(data);
+              SmartContractFunction.smartContracts();
             },
             child: Text(
               'Catalogue',

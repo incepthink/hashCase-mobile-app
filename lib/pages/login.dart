@@ -121,9 +121,10 @@ class _LoginPageState extends State<LoginPage> {
       final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
       if (verifiedMessage == "Token verified") {
         if (await API().metamaskLogin(ses)) {
-          SmartContractFunction().smartContracts();
-          var mappedToken = await SmartContractFunction().smartContracts();
-          await API().onWalletNfts(mappedToken);
+          // SmartContractFunction.smartContracts();
+          // var mappedToken = await SmartContractFunction.smartContracts();
+          print('etheriumconnect');
+          await API().onWalletNfts();
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const LandingPage()));
         }
@@ -132,6 +133,7 @@ class _LoginPageState extends State<LoginPage> {
       // kil session
       connector.killSession();
     } catch (e) {
+      print(e);
       throw 'Could not launch $metamaskDownloadLink';
     }
   }
