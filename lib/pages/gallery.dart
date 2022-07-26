@@ -142,8 +142,12 @@ class _GalleryPageState extends State<GalleryPage> {
             sliver: ValueListenableBuilder(
                 valueListenable: globalBox.listenable(keys: ['HcNFTs']),
                 builder: (context, Box<dynamic> box, _) {
-                  final HcNFTList hcNFTList = box.get('HcNFTs');
-                  final displayList = hcNFTList.hcNFTList;
+                  final HcNFTList? hcNFTList =
+                      box.get('HcNFTs', defaultValue: null);
+                  List<HcNFT> displayList = [];
+                  if (hcNFTList != null) {
+                    displayList = hcNFTList.hcNFTList;
+                  }
                   if (displayList.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.only(top: 50),
