@@ -8,6 +8,7 @@ import 'package:hash_case/services/storageService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:collection/collection.dart';
 
 import '../HiveDB/NFT/HcNFT.dart';
 import '../HiveDB/NFT/NFT2.dart';
@@ -18,10 +19,10 @@ class API {
     final response =
         await http.get(Uri.parse('${Endpoints.baseURL}/user/getToken'));
     if (response.statusCode == 200) {
-      print(response.body);
+      // print(response.body);
       return response.body;
     } else {
-      print(response.body);
+      // print(response.body);
       throw Exception(response.body);
     }
   }
@@ -31,12 +32,12 @@ class API {
         Uri.parse('${Endpoints.baseURL}/user/verifyToken'),
         body: {'address': address, 'signature': signature});
     if (response.statusCode == 200) {
-      print(response.body);
+      // print(response.body);
       await StorageService.JWTStorage.write(
           key: 'JWT', value: jsonDecode(response.body)['token']);
       return jsonDecode(response.body)['message'];
     } else {
-      print(response.body);
+      // print(response.body);
       throw Exception(response.body);
     }
   }
@@ -48,7 +49,7 @@ class API {
     if (response.statusCode == 200) {
       try {
         final res = jsonDecode(response.body);
-        print(res);
+        // print(res);
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
@@ -61,7 +62,7 @@ class API {
         //     .write(key: 'user', value: res['user_instance']['id'].toString());
 
         print('===Updated User Data===');
-        print(userData);
+        // print(userData);
         return Future.value(true);
       } catch (e) {
         print("Error updating USER PROFILE: ${e.toString()}");
@@ -70,7 +71,7 @@ class API {
 
       // return response.body;
     } else {
-      print(response.body);
+      // print(response.body);
       return Future.value(false);
       // throw Exception(response.body);
     }
@@ -87,9 +88,7 @@ class API {
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
-        print('check 1');
         final UserData userData = UserData.fromMap(res);
-        print('check 2');
         await globalBox.put('userData', userData);
 
         // ===DEPRECIATED===
@@ -101,7 +100,7 @@ class API {
         // print(userData);
         return Future.value(true);
       } catch (e) {
-        print("Error updating USER PROFILE: ${e.toString()}");
+        print("===Error updating USER PROFILE: ${e.toString()}===");
         return Future.value(false);
       }
     }
@@ -140,16 +139,22 @@ class API {
       Uri.parse('${Endpoints.baseURL}/localnft/getNftsOfUser/$userID'),
     );
     if (response.statusCode == 200) {
-      print('===success===');
+      print('===SUCCESS fetchLocalNfts===');
       List<NFT2> localNFTs = [];
+      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
       List<dynamic> data = jsonDecode(response.body);
-      data.forEach((nft) => localNFTs.add(NFT2.fromMap(nft)));
+      data.forEach((value) {
+        NFT2 nft = NFT2.fromMap(value);
+        var preExistingNft =
+            localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
+        if (preExistingNft == null) localNFTs.add(nft);
+      });
       userData.myNFTList = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
     } else {
-      print("===ERROR===");
-      print(response.body);
+      print("===ERROR fetchLocalNfts===");
+      // print(response.body);
       throw Exception(response.body);
     }
   }
@@ -171,7 +176,6 @@ class API {
         body: jsonEncode(token));
 
     if (response.statusCode == 200) {
-      print('entered');
       print(response.body);
       print('===success===');
       List<NFT2> localNFTs = [];
@@ -185,7 +189,6 @@ class API {
       //   }
       // });
       for (var nft in data) {
-        print('whats the error-$nft');
         if (nft != null) {
           localNFTs.add(NFT2(
             merchandise: Merchandise.fromMap(nft),
@@ -199,11 +202,9 @@ class API {
       }
       userData.myNFTList = localNFTs;
       await globalBox.put('userData', userData);
-      print('return is the problem?');
       return response.body;
       // return jsonDecode(response.body);
     } else {
-      print('entered else');
       print(response.statusCode.toString());
       throw Exception(response.body);
     }
@@ -214,22 +215,19 @@ class API {
       Uri.parse('${Endpoints.baseURL}/collections/'),
     );
     print('===getCollectionsPassed===');
-    print(response.statusCode.toString());
     if (response.statusCode == 200) {
       final globalBox = Hive.box('globalBox');
       final List<HcNFT> nftList = [];
       final List<dynamic> data = jsonDecode(response.body);
-      print(data.toString());
       data.forEach((element) {
         final x = HcNFT.fromMap(element);
-        print(x.toString());
         nftList.add(x);
       });
       final value = HcNFTList(hcNFTList: nftList);
       await globalBox.put('HcNFTs', value);
       return jsonDecode(response.body);
     } else {
-      print(response.body);
+      // print(response.body);
       throw Exception(response.body);
     }
   }

@@ -32,6 +32,7 @@ class SmartContractFunction {
     var mappedToken = tokens[0]
         .map((e) => {'contract_id': contractId.toInt(), 'id': e.toInt()})
         .toList();
-    var walletNFTs = await API().onWalletNfts(mappedToken);
+    return mappedToken;
+    // var walletNFTs = await API().onWalletNfts(mappedToken);
   }
 }
