@@ -159,6 +159,8 @@ class _LoginPageState extends State<LoginPage> {
       await connector.killSession();
       if (await API().metamaskLogin(session)) {
         SmartContractFunction().smartContracts();
+        var mappedToken = await SmartContractFunction().smartContracts();
+        await API().onWalletNfts(mappedToken);
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => const LandingPage()));
       }
