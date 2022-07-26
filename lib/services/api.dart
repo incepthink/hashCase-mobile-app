@@ -1,5 +1,6 @@
 import 'package:hash_case/HiveDB/NFT/HcNFT.dart';
 import 'package:hash_case/HiveDB/NFT/HcNFTList.dart';
+import 'package:hash_case/HiveDB/NFT/NFT.dart';
 import 'package:hash_case/services/endpoints.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -29,6 +30,8 @@ class API {
         body: {'address': address, 'signature': signature});
     if (response.statusCode == 200) {
       print(response.body);
+      await StorageService.JWTStorage.write(
+          key: 'JWT', value: jsonDecode(response.body)['token']);
       return jsonDecode(response.body)['message'];
     } else {
       print(response.body);
@@ -36,26 +39,14 @@ class API {
     }
   }
 
-  Future metamaskLogin(var walletAddress) async {
+  Future<bool> metamaskLogin(var walletAddress) async {
     final response = await http.get(
       Uri.parse('${Endpoints.baseURL}/user/getUser/$walletAddress'),
     );
     if (response.statusCode == 200) {
-      print('testing------${response.body}');
-      return response.body;
-    } else {
-      print(response.body);
-      throw Exception(response.body);
-    }
-  }
-
-  Future<bool> SignIN(String email, String password) async {
-    final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/user/login'),
-        body: {'email': email, 'password': password});
-    if (response.statusCode == 200) {
       try {
         final res = jsonDecode(response.body);
+        print(res);
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
@@ -74,10 +65,47 @@ class API {
         print("Error updating USER PROFILE: ${e.toString()}");
         return Future.value(false);
       }
+
+      // return response.body;
+    } else {
+      print(response.body);
+      return Future.value(false);
+      // throw Exception(response.body);
+    }
+  }
+
+  Future<bool> SignIN(String email, String password) async {
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/user/login'),
+        body: {'email': email, 'password': password});
+    if (response.statusCode == 200) {
+      try {
+        final res = jsonDecode(response.body);
+        print(res);
+        //store userData in Hive
+        final globalBox = Hive.box('globalBox');
+        if (globalBox.containsKey('userData')) globalBox.delete('userData');
+        print('check 1');
+        final UserData userData = UserData.fromMap(res);
+        print('check 2');
+        await globalBox.put('userData', userData);
+
+        // ===DEPRECIATED===
+        // await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
+        // await StorageService.userStorage
+        //     .write(key: 'user', value: res['user_instance']['id'].toString());
+
+        print('===Updated User Data===');
+        print(userData);
+        return Future.value(true);
+      } catch (e) {
+        print("Error updating USER PROFILE: ${e.toString()}");
+        return Future.value(false);
+      }
     }
     print(response.body);
     return Future.value(false);
-    throw Exception(response.body);
+    // throw Exception(response.body);
   }
 
   Future SignUp(String email, String password) async {
@@ -113,7 +141,9 @@ class API {
       print('===success===');
       List<NFT2> localNFTs = [];
       List<dynamic> data = jsonDecode(response.body);
+      print('testuing localNFTs----$data');
       data.forEach((nft) {
+        print(nft);
         // var test = NFT2.fromMap(element);
         // print(test);
         localNFTs.add(NFT2.fromMap(nft));
@@ -129,22 +159,46 @@ class API {
   }
 
   Future onWalletNfts(var token) async {
+    final globalBox = Hive.box('globalBox');
+    final UserData userData = globalBox.get('userData');
+    // var userId = await StorageService.userStorage.read(key: 'user');
+    int muserID = userData.id;
     // var userId = await StorageService().userStorage.read(key: 'user');
-    // var jwtToken = await StorageService().userStorage.read(key: 'JWT');
+    var jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
     print('is this here');
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
         headers: {
           "Content-Type": "application/json",
-          'Authorization':
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiaWF0IjoxNjU4NTkyNzY0fQ.AM4mXIgB9YsqvDv26rLJI_-kMZWuOi5EMGPbYDCUMZw',
+          'Authorization': 'Bearer $jwtToken',
         },
         body: jsonEncode(token));
 
     if (response.statusCode == 200) {
       print('entered');
       print(response.body);
-      return jsonDecode(response.body);
+      print('===success===');
+      List<NFT2> localNFTs = [];
+      List<dynamic> data = jsonDecode(response.body);
+      print(data);
+      // data.forEach((nft) {
+      //   // var test = NFT2.fromMap(element);
+      //   // print(test);
+      //   if (nft != null) {
+      //     localNFTs.add(NFT2.fromMap(nft));
+      //   }
+      // });
+      for (var nft in data) {
+        print('whats the error-$nft');
+        if (nft != null) {
+          localNFTs.add(NFT2.fromMap(nft));
+        }
+      }
+      userData.myNFTList = localNFTs;
+      await globalBox.put('userData', userData);
+      print('return is the problem?');
+      return response.body;
+      // return jsonDecode(response.body);
     } else {
       print('entered else');
       print(response.statusCode);

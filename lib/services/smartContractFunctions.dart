@@ -4,8 +4,8 @@ import 'package:hash_case/services/storageService.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
-class SmartContractFunction{
-  _smartContracts() async {
+class SmartContractFunction {
+  Future smartContracts() async {
     String abiStringFile =
         await rootBundle.loadString("SmartContract/nft_apparel_v2.abi.json");
     // print(abiStringFile);

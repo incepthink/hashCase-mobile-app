@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hash_case/GlobalConstants.dart';
 import 'package:hash_case/pages/landing.dart';
 import 'package:hash_case/services/api.dart';
+import 'package:hash_case/services/smartContractFunctions.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
@@ -108,14 +109,18 @@ class _LoginPageState extends State<LoginPage> {
 
       final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
       if (verifiedMessage == "Token verified") {
-        await API().metamaskLogin(ses);
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => const LandingPage()));
+        if (await API().metamaskLogin(ses)) {
+          SmartContractFunction().smartContracts();
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const LandingPage()));
+        }
       }
 
       //kil session
       connector.killSession();
-    } catch (e) {}
+    } catch (e) {
+      throw 'Could not launch $metamaskDownloadLink';
+    }
   }
 
   @override
@@ -506,15 +511,15 @@ class _LoginPageState extends State<LoginPage> {
                                                 content: Text('In the works'),
                                               ),
                                             );
-                                            try {
-                                              _ethereumConnect();
-                                            } catch (e) {
-                                              print('===test===');
-                                              await _launchUrl();
-                                            } finally {
-                                              print('===test===');
-                                              await _launchUrl();
-                                            }
+                                            // try {
+                                            _ethereumConnect();
+                                            // } catch (e) {
+                                            //   print('===test===');
+                                            //   await _launchUrl();
+                                            // } finally {
+                                            //   print('===test===');
+                                            //   await _launchUrl();
+                                            // }
                                           },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
@@ -542,83 +547,83 @@ class _LoginPageState extends State<LoginPage> {
                                                 ]),
                                           ),
                                         ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                        backgroundColor:
-                                                            kColorCta,
-                                                        content: Text(
-                                                            'In the works'),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(vertical: 8),
-                                                    decoration: BoxDecoration(
-                                                      color: kColorCta
-                                                          .withOpacity(0.2),
-                                                      borderRadius:
-                                                          const BorderRadius
-                                                              .all(
-                                                        Radius.circular(4),
-                                                      ),
-                                                    ),
-                                                    child: SvgPicture.asset(
-                                                      'assets/icons/apple-icon.svg',
-                                                      height: 35,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                width: 10,
-                                              ),
-                                              Expanded(
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      const SnackBar(
-                                                        backgroundColor:
-                                                            kColorCta,
-                                                        content: Text(
-                                                            'In the works'),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(vertical: 8),
-                                                    decoration: BoxDecoration(
-                                                      color: kColorCta
-                                                          .withOpacity(0.2),
-                                                      borderRadius:
-                                                          const BorderRadius
-                                                              .all(
-                                                        Radius.circular(4),
-                                                      ),
-                                                    ),
-                                                    child: SvgPicture.asset(
-                                                      'assets/icons/google-icon.svg',
-                                                      height: 35,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                        // Padding(
+                                        //   padding: const EdgeInsets.symmetric(
+                                        //       vertical: 8.0),
+                                        //   child: Row(
+                                        //     children: [
+                                        //       Expanded(
+                                        //         child: InkWell(
+                                        //           onTap: () {
+                                        //             ScaffoldMessenger.of(
+                                        //                     context)
+                                        //                 .showSnackBar(
+                                        //               const SnackBar(
+                                        //                 backgroundColor:
+                                        //                     kColorCta,
+                                        //                 content: Text(
+                                        //                     'In the works'),
+                                        //               ),
+                                        //             );
+                                        //           },
+                                        //           child: Container(
+                                        //             padding: const EdgeInsets
+                                        //                 .symmetric(vertical: 8),
+                                        //             decoration: BoxDecoration(
+                                        //               color: kColorCta
+                                        //                   .withOpacity(0.2),
+                                        //               borderRadius:
+                                        //                   const BorderRadius
+                                        //                       .all(
+                                        //                 Radius.circular(4),
+                                        //               ),
+                                        //             ),
+                                        //             child: SvgPicture.asset(
+                                        //               'assets/icons/apple-icon.svg',
+                                        //               height: 35,
+                                        //             ),
+                                        //           ),
+                                        //         ),
+                                        //       ),
+                                        //       const SizedBox(
+                                        //         width: 10,
+                                        //       ),
+                                        //       Expanded(
+                                        //         child: InkWell(
+                                        //           onTap: () {
+                                        //             ScaffoldMessenger.of(
+                                        //                     context)
+                                        //                 .showSnackBar(
+                                        //               const SnackBar(
+                                        //                 backgroundColor:
+                                        //                     kColorCta,
+                                        //                 content: Text(
+                                        //                     'In the works'),
+                                        //               ),
+                                        //             );
+                                        //           },
+                                        //           child: Container(
+                                        //             padding: const EdgeInsets
+                                        //                 .symmetric(vertical: 8),
+                                        //             decoration: BoxDecoration(
+                                        //               color: kColorCta
+                                        //                   .withOpacity(0.2),
+                                        //               borderRadius:
+                                        //                   const BorderRadius
+                                        //                       .all(
+                                        //                 Radius.circular(4),
+                                        //               ),
+                                        //             ),
+                                        //             child: SvgPicture.asset(
+                                        //               'assets/icons/google-icon.svg',
+                                        //               height: 35,
+                                        //             ),
+                                        //           ),
+                                        //         ),
+                                        //       ),
+                                        //     ],
+                                        //   ),
+                                        // ),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
