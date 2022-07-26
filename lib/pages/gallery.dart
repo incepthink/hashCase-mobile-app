@@ -12,7 +12,7 @@ import '../services/api.dart';
 import 'login.dart';
 
 class GalleryPage extends StatefulWidget {
-  GalleryPage({Key? key}) : super(key: key);
+  const GalleryPage({Key? key}) : super(key: key);
 
   @override
   State<GalleryPage> createState() => _GalleryPageState();
@@ -50,7 +50,7 @@ class _GalleryPageState extends State<GalleryPage> {
           floating: true,
           // pinned: true,
           // snap: true,
-          leading: SizedBox(),
+          leading: const SizedBox(),
           shadowColor: Colors.transparent,
           title: InkWell(
             onTap: () async {
@@ -60,12 +60,21 @@ class _GalleryPageState extends State<GalleryPage> {
               //   ),
               // );
               final api = API();
-              await api.getCollections();
+              // await api.getCollections();
               // await api.fetchLocalNfts();
               // final globalBox = Hive.box('globalBox');
               // UserData userData = globalBox.get('userData');
               // final myNFTList = userData.myNFTList;
               // print(myNFTList);
+              List<dynamic> data = [
+                {"id": 1, "contract_id": 1},
+                {"id": 2, "contract_id": 1},
+                {"id": 3, "contract_id": 1},
+                {"id": 4, "contract_id": 1},
+                {"id": 5, "contract_id": 1},
+                {"id": 6, "contract_id": 1}
+              ];
+              await api.onWalletNfts(data);
             },
             child: Text(
               'Catalogue',
@@ -111,7 +120,7 @@ class _GalleryPageState extends State<GalleryPage> {
                     const SizedBox(
                       height: 17,
                     ),
-                    Container(
+                    SizedBox(
                       height: 40,
                       child: ListView.separated(
                         separatorBuilder: (context, index) =>
@@ -138,12 +147,18 @@ class _GalleryPageState extends State<GalleryPage> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             sliver: ValueListenableBuilder(
                 valueListenable: globalBox.listenable(keys: ['HcNFTs']),
                 builder: (context, Box<dynamic> box, _) {
-                  final HcNFTList hcNFTList = box.get('HcNFTs');
-                  final displayList = hcNFTList.hcNFTList;
+                  // final HcNFTList hcNFTList = box.get('HcNFTs');
+                  final HcNFTList? hcNFTList =
+                      box.get('HcNFTs', defaultValue: null);
+                  List<HcNFT> displayList = [];
+                  if (hcNFTList != null) {
+                    displayList = hcNFTList.hcNFTList;
+                  }
+                  // final displayList = hcNFTList.hcNFTList;
                   if (displayList.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.only(top: 50),
@@ -221,7 +236,7 @@ class HcNFTCard extends StatelessWidget {
                   //   'BobbleHeadz',
                   //   style: kTextStyleSecondary,
                   // ),
-                  Icon(
+                  const Icon(
                     Icons.verified,
                     color: Colors.greenAccent,
                     size: 12,
@@ -281,7 +296,7 @@ class HcNFTCard extends StatelessWidget {
 }
 
 class ProductInfoBuilder extends StatelessWidget {
-  ProductInfoBuilder({
+  const ProductInfoBuilder({
     Key? key,
     this.imageUrl,
     required this.title,

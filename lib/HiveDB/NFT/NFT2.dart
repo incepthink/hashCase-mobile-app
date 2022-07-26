@@ -20,11 +20,9 @@ class NFT2 extends HiveObject {
 
   @HiveField(4)
   DateTime createdAt;
-  // String createdAt;
 
   @HiveField(5)
   DateTime updatedAt;
-  // String updatedAt;
 
   @HiveField(6)
   Merchandise merchandise;
@@ -46,7 +44,7 @@ class NFT2 extends HiveObject {
       nftID: data['nft_id'] ?? -1,
       createdAt: DateTime.parse(data['createdAt'] ?? '2000-01-01 00:00:01'),
       updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
-      merchandise: Merchandise.fromMap(data['merchandise'] ?? []),
+      merchandise: Merchandise.fromMap(data['merchandise']),
       number: data['number'] ?? -1,
     );
   }

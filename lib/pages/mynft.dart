@@ -17,6 +17,18 @@ class MyNFTs extends StatefulWidget {
 
 class _MyNFTsState extends State<MyNFTs> {
   final globalBox = Hive.box('globalBox');
+  final ValueNotifier isLoading = ValueNotifier(true);
+  @override
+  void initState() {
+    super.initState();
+    _getData();
+  }
+
+  _getData() async {
+    isLoading.value = true;
+    await API().fetchLocalNfts();
+    isLoading.value = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +46,32 @@ class _MyNFTsState extends State<MyNFTs> {
               builder: (context, Box<dynamic> box, value) {
                 UserData? userData = box.get('userData', defaultValue: null);
                 final myNFTList = userData == null ? [] : userData.myNFTList;
+                if (userData == null) {}
                 if (myNFTList.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 50),
-                    child: SizedBox(
-                      child: CircularProgressIndicator(),
-                      height: 30,
-                    ),
+                  return ValueListenableBuilder(
+                    valueListenable: isLoading,
+                    builder: (context, value, child) {
+                      if (isLoading.value) {
+                        return const Padding(
+                          padding: EdgeInsets.only(top: 50),
+                          child: SizedBox(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                            height: 30,
+                            width: 30,
+                          ),
+                        );
+                      }
+                      return Container(
+                        padding: const EdgeInsets.only(top: 50),
+                        child: const Text(
+                          'No NFTs to display',
+                          style: kTextStyleBody,
+                        ),
+                      );
+                    },
                   );
                 }
                 return Expanded(
@@ -62,12 +93,6 @@ class _MyNFTsState extends State<MyNFTs> {
         ],
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    API().fetchLocalNfts();
   }
 }
 

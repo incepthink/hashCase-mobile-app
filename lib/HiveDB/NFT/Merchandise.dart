@@ -44,7 +44,8 @@ class Merchandise extends HiveObject {
     return Merchandise(
       id: data['id'] ?? -1,
       tokenID: data['token_id'] ?? -1,
-      claimable: data['claimable'] ?? false,
+      // claimable: data['claimable'] ?? false,
+      claimable: false,
       imageURL: data['nft_image_url'] ?? '-',
       openseaLink: data['opensea_link'] ?? '-',
       description: data['description'] ?? '-',

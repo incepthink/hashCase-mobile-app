@@ -51,7 +51,6 @@ class _LandingPageState extends State<LandingPage> {
     super.initState();
     final api = API();
     api.getCollections();
-    api.fetchLocalNfts();
   }
 
   @override

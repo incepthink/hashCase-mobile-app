@@ -123,6 +123,30 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  _handleSingIn() async {
+    final String email = _emailController.text;
+    final String password = _passwordController.text.trim();
+    final api = API();
+    isLoading.value = true;
+    bool result = await api.SignIN(email, password);
+    isLoading.value = false;
+    print('the result is $result');
+    if (result) {
+      print('test');
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const LandingPage()),
+      );
+    } else {
+      print('failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: kColorCta,
+          content: Text('Error Logging in'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -354,6 +378,7 @@ class _LoginPageState extends State<LoginPage> {
                                                 color: Colors.white54),
                                           ),
                                           child: TextField(
+                                            onSubmitted: (_) => _handleSingIn(),
                                             controller: _passwordController,
                                             obscureText: showPassword,
                                             obscuringCharacter: '.',
@@ -425,36 +450,7 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                         ),
                                         InkWell(
-                                          onTap: () async {
-                                            final String email =
-                                                _emailController.text;
-                                            final String password =
-                                                _passwordController.text.trim();
-                                            final api = API();
-                                            isLoading.value = true;
-                                            bool result = await api.SignIN(
-                                                email, password);
-                                            isLoading.value = false;
-                                            print('the result is $result');
-                                            if (result) {
-                                              print('test');
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const LandingPage()),
-                                              );
-                                            } else {
-                                              print('failed');
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                  backgroundColor: kColorCta,
-                                                  content:
-                                                      Text('Error Logging in'),
-                                                ),
-                                              );
-                                            }
-                                          },
+                                          onTap: _handleSingIn,
                                           child: Hero(
                                             tag: 'third',
                                             child: Container(
