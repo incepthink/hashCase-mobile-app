@@ -229,7 +229,10 @@ class HcNFTCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    hcNFT.contractAddress,
+                    hcNFT.contractAddress.substring(0, 6) +
+                        "...." +
+                        hcNFT.contractAddress
+                            .substring(hcNFT.contractAddress.length - 4),
                     style: kTextStyleSecondary,
                   ),
                   // Text(
