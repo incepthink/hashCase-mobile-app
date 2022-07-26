@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:hash_case/HiveDB/NFT/HcNFT.dart';
 import 'package:hash_case/HiveDB/NFT/HcNFTList.dart';
 import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
 import 'package:hash_case/HiveDB/NFT/NFT.dart';
 import 'package:hash_case/services/endpoints.dart';
+import 'package:hash_case/services/smartContractFunctions.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -130,83 +133,92 @@ class API {
   }
 
   Future fetchLocalNfts() async {
-    final globalBox = Hive.box('globalBox');
-    final UserData userData = globalBox.get('userData');
-    // var userId = await StorageService.userStorage.read(key: 'user');
-    int userID = userData.id;
+    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
+    if (address == null) {
+      final globalBox = Hive.box('globalBox');
+      final UserData userData = globalBox.get('userData');
+      // var userId = await StorageService.userStorage.read(key: 'user');
+      int userID = userData.id;
 
-    final response = await http.get(
-      Uri.parse('${Endpoints.baseURL}/localnft/getNftsOfUser/$userID'),
-    );
-    if (response.statusCode == 200) {
-      print('===SUCCESS fetchLocalNfts===');
-      List<NFT2> localNFTs = [];
-      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
-      List<dynamic> data = jsonDecode(response.body);
-      data.forEach((value) {
-        NFT2 nft = NFT2.fromMap(value);
-        var preExistingNft =
-            localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
-        if (preExistingNft == null) localNFTs.add(nft);
-      });
-      userData.myNFTList = localNFTs;
-      await globalBox.put('userData', userData);
-      return response.body;
-    } else {
-      print("===ERROR fetchLocalNfts===");
-      // print(response.body);
-      throw Exception(response.body);
+      final response = await http.get(
+        Uri.parse('${Endpoints.baseURL}/localnft/getNftsOfUser/$userID'),
+      );
+      if (response.statusCode == 200) {
+        print('===SUCCESS fetchLocalNfts===');
+        List<NFT2> localNFTs = [];
+        if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+        List<dynamic> data = jsonDecode(response.body);
+        data.forEach((value) {
+          NFT2 nft = NFT2.fromMap(value);
+          var preExistingNft = localNFTs
+              .firstWhereOrNull((element) => element.nftID == nft.nftID);
+          if (preExistingNft == null) localNFTs.add(nft);
+        });
+        userData.myNFTList = localNFTs;
+        await globalBox.put('userData', userData);
+        return response.body;
+      } else {
+        print("===ERROR fetchLocalNfts===");
+        // print(response.body);
+        throw Exception(response.body);
+      }
     }
   }
 
-  Future onWalletNfts(var token) async {
-    final globalBox = Hive.box('globalBox');
-    final UserData userData = globalBox.get('userData');
-    // var userId = await StorageService.userStorage.read(key: 'user');
-    int muserID = userData.id;
-    // var userId = await StorageService().userStorage.read(key: 'user');
-    var jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-    // print('is this here');
-    final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': 'Bearer $jwtToken',
-        },
-        body: jsonEncode(token));
+  Future onWalletNfts() async {
+    print('this is onwalletNFTs');
+    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
+    if (address != null) {
+      print('address is ${address.toString()}');
+      final token = await SmartContractFunction.smartContracts();
+      final globalBox = Hive.box('globalBox');
+      final UserData userData = globalBox.get('userData');
+      // var userId = await StorageService.userStorage.read(key: 'user');
+      int muserID = userData.id;
+      // var userId = await StorageService().userStorage.read(key: 'user');
+      var jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
+      // print('is this here');
+      final response = await http.post(
+          Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': 'Bearer $jwtToken',
+          },
+          body: jsonEncode(token));
 
-    if (response.statusCode == 200) {
-      print(response.body);
-      print('===success===');
-      List<NFT2> localNFTs = [];
-      List<dynamic> data = jsonDecode(response.body);
-      print(data.toString());
-      // data.forEach((nft) {
-      //   // var test = NFT2.fromMap(element);
-      //   // print(test);
-      //   if (nft != null) {
-      //     localNFTs.add(NFT2.fromMap(nft));
-      //   }
-      // });
-      for (var nft in data) {
-        if (nft != null) {
-          localNFTs.add(NFT2(
-            merchandise: Merchandise.fromMap(nft),
-            nftID: -1,
-            id: -1,
-            updatedAt: DateTime.parse('2000-01-01 00:00:01'),
-            userID: -1,
-            createdAt: DateTime.parse('2000-01-01 00:00:01'),
-          ));
+      if (response.statusCode == 200) {
+        // print(response.body);
+        print('===success===');
+        List<NFT2> localNFTs = [];
+        List<dynamic> data = jsonDecode(response.body);
+        // print(data.toString());
+        // data.forEach((nft) {
+        //   // var test = NFT2.fromMap(element);
+        //   // print(test);
+        //   if (nft != null) {
+        //     localNFTs.add(NFT2.fromMap(nft));
+        //   }
+        // });
+        for (var nft in data) {
+          if (nft != null) {
+            localNFTs.add(NFT2(
+              merchandise: Merchandise.fromMap(nft),
+              nftID: -1,
+              id: -1,
+              updatedAt: DateTime.parse('2000-01-01 00:00:01'),
+              userID: -1,
+              createdAt: DateTime.parse('2000-01-01 00:00:01'),
+            ));
+          }
         }
+        userData.myNFTList = localNFTs;
+        await globalBox.put('userData', userData);
+        return response.body;
+        // return jsonDecode(response.body);
+      } else {
+        print(response.statusCode.toString());
+        throw Exception(response.body);
       }
-      userData.myNFTList = localNFTs;
-      await globalBox.put('userData', userData);
-      return response.body;
-      // return jsonDecode(response.body);
-    } else {
-      print(response.statusCode.toString());
-      throw Exception(response.body);
     }
   }
 
@@ -246,8 +258,9 @@ class API {
     }
   }
 
-  signOut() {
+  signOut() async {
     final globalBox = Hive.box('globalBox');
     globalBox.delete('userData');
+    await StorageService.JWTStorage.deleteAll();
   }
 }

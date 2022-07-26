@@ -91,7 +91,6 @@ class _LoginPageState extends State<LoginPage> {
               _uri = uri;
               await launchUrl(
                 Uri.parse(uri),
-                mode: LaunchMode.externalApplication,
               );
             });
 
@@ -132,6 +131,7 @@ class _LoginPageState extends State<LoginPage> {
       // // kil session
       // connector.killSession();
     } catch (e) {
+      print(e);
       throw 'Could not launch $metamaskDownloadLink';
     }
   }
@@ -158,9 +158,8 @@ class _LoginPageState extends State<LoginPage> {
     if (verifiedMessage == "Token verified") {
       await connector.killSession();
       if (await API().metamaskLogin(session)) {
-        SmartContractFunction().smartContracts();
-        var mappedToken = await SmartContractFunction().smartContracts();
-        await API().onWalletNfts(mappedToken);
+        await API().onWalletNfts();
+        main_session = 'ses';
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => const LandingPage()));
       }

@@ -5,7 +5,8 @@ import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
 class SmartContractFunction {
-  Future smartContracts() async {
+  static Future smartContracts() async {
+    print('this is smartontract');
     String abiStringFile =
         await rootBundle.loadString("SmartContract/nft_apparel_v2.abi.json");
     // print(abiStringFile);
@@ -21,11 +22,11 @@ class SmartContractFunction {
     var ethClient = Web3Client('https://polygon-rpc.com', httpClient);
     var credentials = EthPrivateKey.fromHex(
         "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
-    // var address = await StorageService().addressStorage.read(key: 'wallet_address');
+    // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     var address = await credentials.extractAddress();
     var tokens = await ethClient
         .call(contract: contract, function: tokensOfOwner, params: [
-      // EthereumAddress.fromHex('0x6aa93c6c9cb7adccfbef84a91a29d3be5379f72e')
+      // EthereumAddress.fromHex(address)
       address
     ]);
     var contractId = (await API().getServerSideProps())['id'];
@@ -33,6 +34,5 @@ class SmartContractFunction {
         .map((e) => {'contract_id': contractId.toInt(), 'id': e.toInt()})
         .toList();
     return mappedToken;
-    // var walletNFTs = await API().onWalletNfts(mappedToken);
   }
 }

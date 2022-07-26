@@ -27,6 +27,7 @@ class _MyNFTsState extends State<MyNFTs> {
   _getData() async {
     isLoading.value = true;
     await API().fetchLocalNfts();
+    await API().onWalletNfts();
     isLoading.value = false;
   }
 
@@ -42,54 +43,55 @@ class _MyNFTsState extends State<MyNFTs> {
             style: kTextStyleArcadeClassic.copyWith(fontSize: 32),
           ),
           ValueListenableBuilder(
-              valueListenable: globalBox.listenable(keys: ['userData']),
-              builder: (context, Box<dynamic> box, value) {
-                UserData? userData = box.get('userData', defaultValue: null);
-                final myNFTList = userData == null ? [] : userData.myNFTList;
-                if (userData == null) {}
-                if (myNFTList.isEmpty) {
-                  return ValueListenableBuilder(
-                    valueListenable: isLoading,
-                    builder: (context, value, child) {
-                      if (isLoading.value) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                            height: 30,
-                            width: 30,
+            valueListenable: globalBox.listenable(keys: ['userData']),
+            builder: (context, Box<dynamic> box, value) {
+              UserData? userData = box.get('userData', defaultValue: null);
+              final myNFTList = userData == null ? [] : userData.myNFTList;
+              if (userData == null) {}
+              if (myNFTList.isEmpty) {
+                return ValueListenableBuilder(
+                  valueListenable: isLoading,
+                  builder: (context, value, child) {
+                    if (isLoading.value) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 50),
+                        child: SizedBox(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
                           ),
-                        );
-                      }
-                      return Container(
-                        padding: const EdgeInsets.only(top: 50),
-                        child: const Text(
-                          'No NFTs to display',
-                          style: kTextStyleBody,
+                          height: 30,
+                          width: 30,
                         ),
                       );
-                    },
-                  );
-                }
-                return Expanded(
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    // gridDelegate:
-                    //     const SliverGridDelegateWithFixedCrossAxisCount(
-                    //         crossAxisCount: 2,
-                    //         crossAxisSpacing: 10,
-                    //         mainAxisSpacing: 5,
-                    //         childAspectRatio: 1 / 1.4),
-                    itemBuilder: (context, index) {
-                      return NFTCard(nft: myNFTList[index]);
-                    },
-                    itemCount: myNFTList.length,
-                  ),
+                    }
+                    return Container(
+                      padding: const EdgeInsets.only(top: 50),
+                      child: const Text(
+                        'No NFTs to display',
+                        style: kTextStyleBody,
+                      ),
+                    );
+                  },
                 );
-              }),
+              }
+              return Expanded(
+                child: GridView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: 1 / 1.4,
+                  ),
+                  itemBuilder: (context, index) {
+                    return NFTCard(nft: myNFTList[index]);
+                  },
+                  itemCount: myNFTList.length,
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -122,22 +124,25 @@ class NFTCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Image.asset('assets/vectors/mynft1.png'),
-          Image.network(
-            nft.merchandise.imageURL,
-            width: MediaQuery.of(context).size.width * 0.6,
-            loadingBuilder: (BuildContext context, Widget child,
-                ImageChunkEvent? loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
-              );
-            },
+          Expanded(
+            child: Image.network(
+              nft.merchandise.imageURL,
+              fit: BoxFit.fitHeight,
+              loadingBuilder: (BuildContext context, Widget child,
+                  ImageChunkEvent? loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                );
+              },
+            ),
           ),
           ClipRRect(
             child: BackdropFilter(
