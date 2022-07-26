@@ -7,7 +7,7 @@ part 'UserData.g.dart';
 @HiveType(typeId: gc.kUSERDATA)
 class UserData extends HiveObject {
   @HiveField(0)
-  String token;
+  String? token;
 
   @HiveField(1)
   String email;
@@ -56,17 +56,24 @@ class UserData extends HiveObject {
   factory UserData.fromMap(Map data) {
     return UserData(
       token: data['token'],
-      id: data['user_instance']['id'],
-      walletAddress: data['user_instance']['wallet_address'],
-      email: data['user_instance']['email'],
-      passwordHash: data['user_instance']['password_hash'],
-      shippingID: data['user_instance']['shipping_id'] ?? -1,
-      admin: data['user_instance']['admin'] ?? false,
-      username: data['user_instance']['username'] ?? '',
-      createdAt: DateTime.parse(
-          data['user_instance']['createdAt'] ?? '2000-01-01 00:00:01'),
-      updatedAt: DateTime.parse(
-          data['user_instance']['updatedAt'] ?? '2000-01-01 00:00:01'),
+      id: data['user_instance']['id'] ?? data['id'] ?? 'id',
+      walletAddress: data['user_instance']['wallet_address'] ??
+          data['wallet_address'] ??
+          '-',
+      email: data['user_instance']['email'] ?? data['email'] ?? '-',
+      passwordHash: data['user_instance']['password_hash'] ??
+          data['password_hash'] ??
+          '-',
+      shippingID:
+          data['user_instance']['shipping_id'] ?? data['shipping_id'] ?? -1,
+      admin: data['user_instance']['admin'] ?? data['admin'] ?? false,
+      username: data['user_instance']['username'] ?? data['username'] ?? '-',
+      createdAt: DateTime.parse(data['user_instance']['createdAt'] ??
+          data['createdAt'] ??
+          '2000-01-01 00:00:01'),
+      updatedAt: DateTime.parse(data['user_instance']['updatedAt'] ??
+          data['updatedAt'] ??
+          '2000-01-01 00:00:01'),
     );
   }
   @override

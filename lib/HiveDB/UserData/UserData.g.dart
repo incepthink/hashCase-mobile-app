@@ -17,7 +17,7 @@ class UserDataAdapter extends TypeAdapter<UserData> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return UserData(
-      token: fields[0] as String,
+      token: fields[0] as String?,
       email: fields[1] as String,
       id: fields[2] as int,
       createdAt: fields[8] as DateTime,
