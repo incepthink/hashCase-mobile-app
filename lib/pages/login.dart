@@ -107,57 +107,65 @@ class _LoginPageState extends State<LoginPage> {
       var ses = connector.session.accounts[0];
 
       await StorageService.JWTStorage.write(key: 'wallet_address', value: ses);
-      await launchUrl(
-        Uri.parse(_uri),
-      );
-      final message = await API().getToken();
-      final signedBytes = await provider.personalSign(
-        message: message,
-        address: ses,
-        password: '',
-      );
-      //Getting the verified message
+      // await launchUrl(
+      //   Uri.parse(_uri),
+      // );
+      // final message = await API().getToken();
+      // final signedBytes = await provider.personalSign(
+      //   message: message,
+      //   address: ses,
+      //   password: '',
+      // );
+      // //Getting the verified message
 
-      final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
-      if (verifiedMessage == "Token verified") {
-        if (await API().metamaskLogin(ses)) {
-          SmartContractFunction().smartContracts();
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const LandingPage()));
-        }
-      }
+      // final verifiedMessage = await API().getVerifiedToken(ses, signedBytes);
+      // // kil session
+      // connector.killSession();
+      // if (verifiedMessage == "Token verified") {
+      //   if (await API().metamaskLogin(ses)) {
+      //     SmartContractFunction().smartContracts();
+      //     Navigator.of(context).push(
+      //         MaterialPageRoute(builder: (context) => const LandingPage()));
+      //   }
+      // }
 
-      // kil session
-      connector.killSession();
+      // // kil session
+      // connector.killSession();
     } catch (e) {
       throw 'Could not launch $metamaskDownloadLink';
     }
   }
 
-  // _ethereumSign(WalletConnect connector, var session) async {
-  //   final provider = EthereumWalletConnectProvider(connector);
+  _ethereumSign(WalletConnect connector, var session) async {
+    if (!connector.connected) {
+      print('not connected');
+      _ethereumConnect();
+    }
+    final provider = EthereumWalletConnectProvider(connector);
 
-  //   await launchUrl(
-  //     Uri.parse(_uri),
-  //   );
-  //   final message = await API().getToken();
-  //   final signedBytes = await provider.personalSign(
-  //     message: message,
-  //     address: session,
-  //     password: '',
-  //   );
-  //   //Getting the verified message
+    await launchUrl(
+      Uri.parse(_uri),
+    );
+    final message = await API().getToken();
+    final signedBytes = await provider.personalSign(
+      message: message,
+      address: session,
+      password: '',
+    );
+    //Getting the verified message
 
-  //   final verifiedMessage = await API().getVerifiedToken(session, signedBytes);
-  //   if (verifiedMessage == "Token verified") {
-  //     if (await API().metamaskLogin(session)) {
-  //       SmartContractFunction().smartContracts();
-  //       Navigator.of(context)
-  //           .push(MaterialPageRoute(builder: (context) => const LandingPage()));
-  //     }
-  //   }
-  //   connector.killSession();
-  // }
+    final verifiedMessage = await API().getVerifiedToken(session, signedBytes);
+    if (verifiedMessage == "Token verified") {
+      await connector.killSession();
+      if (await API().metamaskLogin(session)) {
+        SmartContractFunction().smartContracts();
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => const LandingPage()));
+      }
+    }
+    // connector.killSession();
+  }
+
   _handleSingIn() async {
     final String email = _emailController.text;
     final String password = _passwordController.text.trim();
@@ -533,106 +541,110 @@ class _LoginPageState extends State<LoginPage> {
                                             ),
                                           ),
                                         ),
-                                        // (main_session == 'ses')
-                                        // ?
-                                        InkWell(
-                                          onTap: () async {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                backgroundColor: kColorCta,
-                                                content: Text('In the works'),
-                                              ),
-                                            );
-                                            // try {
-                                            _ethereumConnect();
-                                            // } catch (e) {
-                                            //   print('===test===');
-                                            //   await _launchUrl();
-                                            // } finally {
-                                            //   print('===test===');
-                                            //   await _launchUrl();
-                                            // }
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 12),
-                                            decoration: BoxDecoration(
-                                              color: kColorCta.withOpacity(0.2),
-                                              borderRadius:
-                                                  const BorderRadius.all(
-                                                Radius.circular(4),
-                                              ),
-                                            ),
-                                            width: double.infinity,
-                                            child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  SvgPicture.asset(
-                                                      'assets/icons/metamask-icon.svg'),
-                                                  const SizedBox(width: 15),
-                                                  Text(
-                                                    'Continue with Metamask',
-                                                    style: kTextStyleH1
-                                                        .copyWith(fontSize: 16),
+                                        (main_session == 'ses')
+                                            ? InkWell(
+                                                onTap: () async {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      backgroundColor:
+                                                          kColorCta,
+                                                      content:
+                                                          Text('In the works'),
+                                                    ),
+                                                  );
+                                                  // try {
+                                                  _ethereumConnect();
+                                                  // } catch (e) {
+                                                  //   print('===test===');
+                                                  //   await _launchUrl();
+                                                  // } finally {
+                                                  //   print('===test===');
+                                                  //   await _launchUrl();
+                                                  // }
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 12),
+                                                  decoration: BoxDecoration(
+                                                    color: kColorCta
+                                                        .withOpacity(0.2),
+                                                    borderRadius:
+                                                        const BorderRadius.all(
+                                                      Radius.circular(4),
+                                                    ),
                                                   ),
-                                                ]),
-                                          ),
-                                        )
-                                        // : InkWell(
-                                        //     onTap: () async {
-                                        //       ScaffoldMessenger.of(context)
-                                        //           .showSnackBar(
-                                        //         const SnackBar(
-                                        //           backgroundColor:
-                                        //               kColorCta,
-                                        //           content:
-                                        //               Text('In the works'),
-                                        //         ),
-                                        //       );
-                                        //       // try {
-                                        //       _ethereumSign(main_connector,
-                                        //           main_session);
-                                        //       // } catch (e) {
-                                        //       //   print('===test===');
-                                        //       //   await _launchUrl();
-                                        //       // } finally {
-                                        //       //   print('===test===');
-                                        //       //   await _launchUrl();
-                                        //       // }
-                                        //     },
-                                        //     child: Container(
-                                        //       padding: const EdgeInsets
-                                        //           .symmetric(vertical: 12),
-                                        //       decoration: BoxDecoration(
-                                        //         color: kColorCta
-                                        //             .withOpacity(0.2),
-                                        //         borderRadius:
-                                        //             const BorderRadius.all(
-                                        //           Radius.circular(4),
-                                        //         ),
-                                        //       ),
-                                        //       width: double.infinity,
-                                        //       child: Row(
-                                        //           mainAxisAlignment:
-                                        //               MainAxisAlignment
-                                        //                   .center,
-                                        //           children: [
-                                        //             SvgPicture.asset(
-                                        //                 'assets/icons/metamask-icon.svg'),
-                                        //             const SizedBox(
-                                        //                 width: 15),
-                                        //             Text(
-                                        //               'Login with Metamask',
-                                        //               style: kTextStyleH1
-                                        //                   .copyWith(
-                                        //                       fontSize: 16),
-                                        //             ),
-                                        //           ]),
-                                        //     ),
-                                        //   ),
-                                        ,
+                                                  width: double.infinity,
+                                                  child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        SvgPicture.asset(
+                                                            'assets/icons/metamask-icon.svg'),
+                                                        const SizedBox(
+                                                            width: 15),
+                                                        Text(
+                                                          'Continue with Metamask',
+                                                          style: kTextStyleH1
+                                                              .copyWith(
+                                                                  fontSize: 16),
+                                                        ),
+                                                      ]),
+                                                ),
+                                              )
+                                            : InkWell(
+                                                onTap: () async {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      backgroundColor:
+                                                          kColorCta,
+                                                      content:
+                                                          Text('In the works'),
+                                                    ),
+                                                  );
+                                                  // try {
+                                                  _ethereumSign(main_connector,
+                                                      main_session);
+                                                  // } catch (e) {
+                                                  //   print('===test===');
+                                                  //   await _launchUrl();
+                                                  // } finally {
+                                                  //   print('===test===');
+                                                  //   await _launchUrl();
+                                                  // }
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 12),
+                                                  decoration: BoxDecoration(
+                                                    color: kColorCta
+                                                        .withOpacity(0.2),
+                                                    borderRadius:
+                                                        const BorderRadius.all(
+                                                      Radius.circular(4),
+                                                    ),
+                                                  ),
+                                                  width: double.infinity,
+                                                  child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        SvgPicture.asset(
+                                                            'assets/icons/metamask-icon.svg'),
+                                                        const SizedBox(
+                                                            width: 15),
+                                                        Text(
+                                                          'Login with Metamask',
+                                                          style: kTextStyleH1
+                                                              .copyWith(
+                                                                  fontSize: 16),
+                                                        ),
+                                                      ]),
+                                                ),
+                                              ),
                                         // Padding(
                                         //   padding: const EdgeInsets.symmetric(
                                         //       vertical: 8.0),
