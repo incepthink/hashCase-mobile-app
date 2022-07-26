@@ -68,6 +68,9 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  var main_connector;
+  var main_session = 'ses';
+
   _ethereumConnect() async {
     try {
       final connector = WalletConnect(
@@ -84,19 +87,27 @@ class _LoginPageState extends State<LoginPage> {
       if (!connector.connected) {
         final session = await connector.createSession(
             chainId: 4160,
-            onDisplayUri: (uri) {
+            onDisplayUri: (uri) async {
               _uri = uri;
-              launchUrl(
+              await launchUrl(
                 Uri.parse(uri),
+                mode: LaunchMode.externalApplication,
               );
             });
+
+        setState(() {
+          main_connector = connector;
+          main_session = connector.session.accounts[0];
+          _uri;
+        });
       }
 
       // signTranaction
       final provider = EthereumWalletConnectProvider(connector);
       var ses = connector.session.accounts[0];
+
       await StorageService.JWTStorage.write(key: 'wallet_address', value: ses);
-      launchUrl(
+      await launchUrl(
         Uri.parse(_uri),
       );
       final message = await API().getToken();
@@ -116,12 +127,37 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
 
-      //kil session
+      // kil session
       connector.killSession();
     } catch (e) {
       throw 'Could not launch $metamaskDownloadLink';
     }
   }
+
+  // _ethereumSign(WalletConnect connector, var session) async {
+  //   final provider = EthereumWalletConnectProvider(connector);
+
+  //   await launchUrl(
+  //     Uri.parse(_uri),
+  //   );
+  //   final message = await API().getToken();
+  //   final signedBytes = await provider.personalSign(
+  //     message: message,
+  //     address: session,
+  //     password: '',
+  //   );
+  //   //Getting the verified message
+
+  //   final verifiedMessage = await API().getVerifiedToken(session, signedBytes);
+  //   if (verifiedMessage == "Token verified") {
+  //     if (await API().metamaskLogin(session)) {
+  //       SmartContractFunction().smartContracts();
+  //       Navigator.of(context)
+  //           .push(MaterialPageRoute(builder: (context) => const LandingPage()));
+  //     }
+  //   }
+  //   connector.killSession();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -502,6 +538,8 @@ class _LoginPageState extends State<LoginPage> {
                                             ),
                                           ),
                                         ),
+                                        // (main_session == 'ses')
+                                        // ?
                                         InkWell(
                                           onTap: () async {
                                             ScaffoldMessenger.of(context)
@@ -546,7 +584,60 @@ class _LoginPageState extends State<LoginPage> {
                                                   ),
                                                 ]),
                                           ),
-                                        ),
+                                        )
+                                        // : InkWell(
+                                        //     onTap: () async {
+                                        //       ScaffoldMessenger.of(context)
+                                        //           .showSnackBar(
+                                        //         const SnackBar(
+                                        //           backgroundColor:
+                                        //               kColorCta,
+                                        //           content:
+                                        //               Text('In the works'),
+                                        //         ),
+                                        //       );
+                                        //       // try {
+                                        //       _ethereumSign(main_connector,
+                                        //           main_session);
+                                        //       // } catch (e) {
+                                        //       //   print('===test===');
+                                        //       //   await _launchUrl();
+                                        //       // } finally {
+                                        //       //   print('===test===');
+                                        //       //   await _launchUrl();
+                                        //       // }
+                                        //     },
+                                        //     child: Container(
+                                        //       padding: const EdgeInsets
+                                        //           .symmetric(vertical: 12),
+                                        //       decoration: BoxDecoration(
+                                        //         color: kColorCta
+                                        //             .withOpacity(0.2),
+                                        //         borderRadius:
+                                        //             const BorderRadius.all(
+                                        //           Radius.circular(4),
+                                        //         ),
+                                        //       ),
+                                        //       width: double.infinity,
+                                        //       child: Row(
+                                        //           mainAxisAlignment:
+                                        //               MainAxisAlignment
+                                        //                   .center,
+                                        //           children: [
+                                        //             SvgPicture.asset(
+                                        //                 'assets/icons/metamask-icon.svg'),
+                                        //             const SizedBox(
+                                        //                 width: 15),
+                                        //             Text(
+                                        //               'Login with Metamask',
+                                        //               style: kTextStyleH1
+                                        //                   .copyWith(
+                                        //                       fontSize: 16),
+                                        //             ),
+                                        //           ]),
+                                        //     ),
+                                        //   ),
+                                        ,
                                         // Padding(
                                         //   padding: const EdgeInsets.symmetric(
                                         //       vertical: 8.0),
@@ -624,6 +715,7 @@ class _LoginPageState extends State<LoginPage> {
                                         //     ],
                                         //   ),
                                         // ),
+
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
