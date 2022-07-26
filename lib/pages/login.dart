@@ -122,6 +122,8 @@ class _LoginPageState extends State<LoginPage> {
       if (verifiedMessage == "Token verified") {
         if (await API().metamaskLogin(ses)) {
           SmartContractFunction().smartContracts();
+          var mappedToken = await SmartContractFunction().smartContracts();
+          await API().onWalletNfts(mappedToken);
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const LandingPage()));
         }
@@ -537,13 +539,13 @@ class _LoginPageState extends State<LoginPage> {
                                         // ?
                                         InkWell(
                                           onTap: () async {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                backgroundColor: kColorCta,
-                                                content: Text('In the works'),
-                                              ),
-                                            );
+                                            // ScaffoldMessenger.of(context)
+                                            //     .showSnackBar(
+                                            //   const SnackBar(
+                                            //     backgroundColor: kColorCta,
+                                            //     content: Text('In the works'),
+                                            //   ),
+                                            // );
                                             // try {
                                             _ethereumConnect();
                                             // } catch (e) {

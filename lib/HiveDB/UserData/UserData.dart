@@ -55,25 +55,34 @@ class UserData extends HiveObject {
 
   factory UserData.fromMap(Map data) {
     return UserData(
-      token: data['token'],
-      id: data['user_instance']['id'] ?? data['id'] ?? 'id',
-      walletAddress: data['user_instance']['wallet_address'] ??
-          data['wallet_address'] ??
-          '-',
-      email: data['user_instance']['email'] ?? data['email'] ?? '-',
-      passwordHash: data['user_instance']['password_hash'] ??
-          data['password_hash'] ??
-          '-',
-      shippingID:
-          data['user_instance']['shipping_id'] ?? data['shipping_id'] ?? -1,
-      admin: data['user_instance']['admin'] ?? data['admin'] ?? false,
-      username: data['user_instance']['username'] ?? data['username'] ?? '-',
-      createdAt: DateTime.parse(data['user_instance']['createdAt'] ??
-          data['createdAt'] ??
-          '2000-01-01 00:00:01'),
-      updatedAt: DateTime.parse(data['user_instance']['updatedAt'] ??
-          data['updatedAt'] ??
-          '2000-01-01 00:00:01'),
+      token: data['token'] ?? '-',
+      id: data['user_instance'] != null
+          ? data['user_instance']['id'] ?? '-'
+          : data['id'] ?? '-',
+      walletAddress: data['user_instance'] != null
+          ? data['user_instance']['wallet_address'] ?? '-'
+          : data['wallet_address'] ?? '-',
+      email: data['user_instance'] != null
+          ? data['user_instance']['email'] ?? '-'
+          : data['email'] ?? '-',
+      passwordHash: data['user_instance'] != null
+          ? data['user_instance']['password_hash'] ?? '-'
+          : data['password_hash'] ?? '-',
+      shippingID: data['user_instance'] != null
+          ? data['user_instance']['shipping_id'] ?? -1
+          : data['shipping_id'] ?? -1,
+      admin: data['user_instance'] != null
+          ? data['user_instance']['admin'] ?? false
+          : data['admin'] ?? false,
+      username: data['user_instance'] != null
+          ? data['user_instance']['username'] ?? '-'
+          : data['username'] ?? '-',
+      createdAt: DateTime.parse(data['user_instance'] != null
+          ? data['user_instance']['createdAt'] ?? '2000-01-01 00:00:01'
+          : data['createdAt'] ?? '2000-01-01 00:00:01'),
+      updatedAt: DateTime.parse(data['user_instance'] != null
+          ? data['user_instance']['updatedAt'] ?? '2000-01-01 00:00:01'
+          : data['updatedAt'] ?? '2000-01-01 00:00:01'),
     );
   }
   @override

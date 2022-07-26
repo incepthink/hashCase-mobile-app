@@ -126,9 +126,6 @@ class NFTCard extends StatelessWidget {
           Image.network(
             nft.merchandise.imageURL,
             width: MediaQuery.of(context).size.width * 0.6,
-            errorBuilder: (BuildContext context, Object exception, stackTrace) {
-              return const CircularProgressIndicator();
-            },
             loadingBuilder: (BuildContext context, Widget child,
                 ImageChunkEvent? loadingProgress) {
               if (loadingProgress == null) return child;
