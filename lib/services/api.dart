@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:hash_case/HiveDB/NFT/HcNFT.dart';
 import 'package:hash_case/HiveDB/NFT/HcNFTList.dart';
+import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
 import 'package:hash_case/HiveDB/NFT/NFT.dart';
 import 'package:hash_case/services/endpoints.dart';
 import 'package:hash_case/services/storageService.dart';
@@ -81,7 +83,7 @@ class API {
     if (response.statusCode == 200) {
       try {
         final res = jsonDecode(response.body);
-        print(res);
+        // print(res);
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
@@ -91,12 +93,12 @@ class API {
         await globalBox.put('userData', userData);
 
         // ===DEPRECIATED===
-        // await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
+        await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
         // await StorageService.userStorage
         //     .write(key: 'user', value: res['user_instance']['id'].toString());
 
         print('===Updated User Data===');
-        print(userData);
+        // print(userData);
         return Future.value(true);
       } catch (e) {
         print("Error updating USER PROFILE: ${e.toString()}");
@@ -141,13 +143,7 @@ class API {
       print('===success===');
       List<NFT2> localNFTs = [];
       List<dynamic> data = jsonDecode(response.body);
-      print('testuing localNFTs----$data');
-      data.forEach((nft) {
-        print(nft);
-        // var test = NFT2.fromMap(element);
-        // print(test);
-        localNFTs.add(NFT2.fromMap(nft));
-      });
+      data.forEach((nft) => localNFTs.add(NFT2.fromMap(nft)));
       userData.myNFTList = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
@@ -165,7 +161,7 @@ class API {
     int muserID = userData.id;
     // var userId = await StorageService().userStorage.read(key: 'user');
     var jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-    print('is this here');
+    // print('is this here');
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
         headers: {
@@ -180,7 +176,7 @@ class API {
       print('===success===');
       List<NFT2> localNFTs = [];
       List<dynamic> data = jsonDecode(response.body);
-      print(data);
+      print(data.toString());
       // data.forEach((nft) {
       //   // var test = NFT2.fromMap(element);
       //   // print(test);
@@ -191,7 +187,14 @@ class API {
       for (var nft in data) {
         print('whats the error-$nft');
         if (nft != null) {
-          localNFTs.add(NFT2.fromMap(nft));
+          localNFTs.add(NFT2(
+            merchandise: Merchandise.fromMap(nft),
+            nftID: -1,
+            id: -1,
+            updatedAt: DateTime.parse('2000-01-01 00:00:01'),
+            userID: -1,
+            createdAt: DateTime.parse('2000-01-01 00:00:01'),
+          ));
         }
       }
       userData.myNFTList = localNFTs;
@@ -201,7 +204,7 @@ class API {
       // return jsonDecode(response.body);
     } else {
       print('entered else');
-      print(response.statusCode);
+      print(response.statusCode.toString());
       throw Exception(response.body);
     }
   }
@@ -211,15 +214,15 @@ class API {
       Uri.parse('${Endpoints.baseURL}/collections/'),
     );
     print('===getCollectionsPassed===');
-    print(response.statusCode);
+    print(response.statusCode.toString());
     if (response.statusCode == 200) {
       final globalBox = Hive.box('globalBox');
       final List<HcNFT> nftList = [];
       final List<dynamic> data = jsonDecode(response.body);
-      print(data);
+      print(data.toString());
       data.forEach((element) {
         final x = HcNFT.fromMap(element);
-        print(x);
+        print(x.toString());
         nftList.add(x);
       });
       final value = HcNFTList(hcNFTList: nftList);

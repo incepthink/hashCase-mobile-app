@@ -49,7 +49,6 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    print('Onboarding1');
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
