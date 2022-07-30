@@ -27,7 +27,7 @@ class UserDataAdapter extends TypeAdapter<UserData> {
       shippingID: fields[5] as int?,
       username: fields[7] as String?,
       walletAddress: fields[3] as String?,
-      myNFTList: (fields[10] as List).cast<NFT2>(),
+      myNFTList: (fields[10] as List).cast<NFT>(),
     );
   }
 

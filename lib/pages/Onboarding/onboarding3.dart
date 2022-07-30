@@ -4,7 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hash_case/pages/login.dart';
+import 'package:hash_case/pages/login/login.dart';
 
 import '../../GlobalConstants.dart';
 import '../../GlobalWidgets/animated_routing.dart';
@@ -49,7 +49,6 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    print(size.height);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(

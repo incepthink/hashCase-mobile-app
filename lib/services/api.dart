@@ -1,24 +1,26 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:hash_case/HiveDB/NFT/HcNFT.dart';
-import 'package:hash_case/HiveDB/NFT/HcNFTList.dart';
+import 'package:hash_case/GlobalConstants.dart';
+import 'package:hash_case/GlobalWidgets/custom_snackbar.dart';
+import 'package:hash_case/HiveDB/NFT/Catalogue.dart';
 import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
-import 'package:hash_case/HiveDB/NFT/NFT.dart';
 import 'package:hash_case/services/endpoints.dart';
+import 'package:hash_case/services/models.dart';
 import 'package:hash_case/services/smartContractFunctions.dart';
 import 'package:hash_case/services/storageService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:collection/collection.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:walletconnect_dart/walletconnect_dart.dart';
+import 'package:multiple_result/multiple_result.dart';
 
-import '../HiveDB/NFT/HcNFT.dart';
-import '../HiveDB/NFT/NFT2.dart';
+import '../HiveDB/NFT/Catalogue.dart';
+import '../HiveDB/NFT/NFT.dart';
 import '../HiveDB/UserData/UserData.dart';
 
 class API {
-  Future<String> getToken() async {
+  static Future<String> getToken() async {
     final response =
         await http.get(Uri.parse('${Endpoints.baseURL}/user/getToken'));
     if (response.statusCode == 200) {
@@ -30,7 +32,7 @@ class API {
     }
   }
 
-  Future<Object> getVerifiedToken(var address, var signature) async {
+  static Future<Object> getVerifiedToken(var address, var signature) async {
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/user/verifyToken'),
         body: {'address': address, 'signature': signature});
@@ -45,7 +47,7 @@ class API {
     }
   }
 
-  Future<bool> metamaskLogin(var walletAddress) async {
+  static Future<bool> metamaskLogin(var walletAddress) async {
     final response = await http.get(
       Uri.parse('${Endpoints.baseURL}/user/getUser/$walletAddress'),
     );
@@ -80,39 +82,46 @@ class API {
     }
   }
 
-  Future<bool> SignIN(String email, String password) async {
-    final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/user/login'),
-        body: {'email': email, 'password': password});
-    if (response.statusCode == 200) {
-      try {
-        final res = jsonDecode(response.body);
-        // print(res);
-        //store userData in Hive
-        final globalBox = Hive.box('globalBox');
-        if (globalBox.containsKey('userData')) globalBox.delete('userData');
-        final UserData userData = UserData.fromMap(res);
-        await globalBox.put('userData', userData);
+  static Future<Result<Exception, bool>> signIn(
+      String email, String password) async {
+    try {
+      final globalBox = Hive.box('globalBox');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/login');
+      final response =
+          await http.post(uri, body: {'email': email, 'password': password});
+      final data = json.decode(response.body);
 
-        // ===DEPRECIATED===
-        await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
-        // await StorageService.userStorage
-        //     .write(key: 'user', value: res['user_instance']['id'].toString());
-
-        print('===Updated User Data===');
-        // print(userData);
-        return Future.value(true);
-      } catch (e) {
-        print("===Error updating USER PROFILE: ${e.toString()}===");
-        return Future.value(false);
+      switch (response.statusCode) {
+        case 200:
+          if (globalBox.containsKey('userData')) globalBox.delete('userData');
+          final UserData userData = UserData.fromMap(data);
+          await globalBox.put('userData', userData);
+          await StorageService.JWTStorage.write(
+              key: 'JWT', value: data['token']);
+          return const Success(true);
+        case 500:
+          String message;
+          switch (data["message"]) {
+            case "User does not exist":
+              message = "User with given credentials does not exist!";
+              break;
+            case "Wrong Password":
+              message = "Wrong Password";
+              break;
+            default:
+              message = "Error Signing in";
+          }
+          return Error(Exception(message));
+        default:
+          return Error(Exception(data["message"]));
       }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
     }
-    print(response.body);
-    return Future.value(false);
-    // throw Exception(response.body);
   }
 
-  Future SignUp(String email, String password) async {
+  static Future signUp(String email, String password) async {
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/user/signup'),
         body: {'email': email, 'password': password});
@@ -132,7 +141,7 @@ class API {
     }
   }
 
-  Future fetchLocalNfts() async {
+  static Future fetchEmailNFTs() async {
     var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     if (address == null) {
       final globalBox = Hive.box('globalBox');
@@ -145,11 +154,11 @@ class API {
       );
       if (response.statusCode == 200) {
         print('===SUCCESS fetchLocalNfts===');
-        List<NFT2> localNFTs = [];
+        List<NFT> localNFTs = [];
         if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
         List<dynamic> data = jsonDecode(response.body);
         data.forEach((value) {
-          NFT2 nft = NFT2.fromMap(value);
+          NFT nft = NFT.fromMap(value);
           var preExistingNft = localNFTs
               .firstWhereOrNull((element) => element.nftID == nft.nftID);
           if (preExistingNft == null) localNFTs.add(nft);
@@ -165,19 +174,14 @@ class API {
     }
   }
 
-  Future onWalletNfts() async {
-    print('this is onwalletNFTs');
+  static Future fetchWalletNfts() async {
     var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     if (address != null) {
-      print('address is ${address.toString()}');
       final token = await SmartContractFunction.smartContracts();
+      final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
       final globalBox = Hive.box('globalBox');
+
       final UserData userData = globalBox.get('userData');
-      // var userId = await StorageService.userStorage.read(key: 'user');
-      int muserID = userData.id;
-      // var userId = await StorageService().userStorage.read(key: 'user');
-      var jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-      // print('is this here');
       final response = await http.post(
           Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
           headers: {
@@ -189,19 +193,11 @@ class API {
       if (response.statusCode == 200) {
         // print(response.body);
         print('===success===');
-        List<NFT2> localNFTs = [];
+        List<NFT> localNFTs = [];
         List<dynamic> data = jsonDecode(response.body);
-        // print(data.toString());
-        // data.forEach((nft) {
-        //   // var test = NFT2.fromMap(element);
-        //   // print(test);
-        //   if (nft != null) {
-        //     localNFTs.add(NFT2.fromMap(nft));
-        //   }
-        // });
         for (var nft in data) {
           if (nft != null) {
-            localNFTs.add(NFT2(
+            localNFTs.add(NFT(
               merchandise: Merchandise.fromMap(nft),
               nftID: -1,
               id: -1,
@@ -222,21 +218,18 @@ class API {
     }
   }
 
-  Future getCollections() async {
+  static Future getCollections() async {
     final response = await http.get(
       Uri.parse('${Endpoints.baseURL}/collections/'),
     );
     print('===getCollectionsPassed===');
     if (response.statusCode == 200) {
-      final globalBox = Hive.box('globalBox');
-      final List<HcNFT> nftList = [];
-      final List<dynamic> data = jsonDecode(response.body);
-      data.forEach((element) {
-        final x = HcNFT.fromMap(element);
-        nftList.add(x);
+      final catalogueBox = Hive.box<Catalogue>('catalogueNFT');
+      final List<dynamic> res = jsonDecode(response.body);
+      res.forEach((data) {
+        final nft = Catalogue.fromMap(data);
+        catalogueBox.put(nft.id, nft);
       });
-      final value = HcNFTList(hcNFTList: nftList);
-      await globalBox.put('HcNFTs', value);
       return jsonDecode(response.body);
     } else {
       // print(response.body);
@@ -244,7 +237,7 @@ class API {
     }
   }
 
-  Future getServerSideProps() async {
+  static Future getServerSideProps() async {
     final response = await http.get(
       Uri.parse('${Endpoints.baseURL}/collections/byId/1'),
     );
@@ -262,5 +255,80 @@ class API {
     final globalBox = Hive.box('globalBox');
     globalBox.delete('userData');
     await StorageService.JWTStorage.deleteAll();
+  }
+
+  static Future<EthereumMetadata> ethereumConnect() async {
+    try {
+      String _uri = '';
+      final connector = WalletConnect(
+        bridge: 'https://bridge.walletconnect.org',
+        clientMeta: const PeerMeta(
+          name: 'WalletConnect',
+          description: 'WalletConnect Developer App',
+          url: 'https://walletconnect.org',
+          icons: [
+            'https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media'
+          ],
+        ),
+      );
+
+      await connector.createSession(
+        chainId: 4160,
+        onDisplayUri: (uri) async {
+          _uri = uri;
+          await launchUrl(
+            Uri.parse(uri),
+          );
+        },
+      );
+
+      await StorageService.JWTStorage.write(
+          key: 'wallet_address', value: connector.session.accounts[0]);
+
+      return EthereumMetadata(
+        address: connector.session.accounts[0],
+        uri: _uri,
+        connector: connector,
+      );
+    } catch (e) {
+      showCustomSnackBar(text: e.toString().substring(23), color: kColorDanger);
+      Uri metamaskDownloadLink = Uri.parse("https://metamask.io/download/");
+      throw 'Could not launch $metamaskDownloadLink';
+    }
+  }
+
+  static Future<bool> ethereumSign(EthereumMetadata ethMeta) async {
+    try {
+      if (!ethMeta.connector.connected) {
+        print('not connected');
+        API.ethereumConnect();
+      }
+      final provider = EthereumWalletConnectProvider(ethMeta.connector);
+      Future.delayed(const Duration(seconds: 1), () async {
+        await launchUrl(
+          Uri.parse(ethMeta.uri),
+        );
+      });
+      final message = await API.getToken();
+      final signedBytes = await provider.personalSign(
+        message: message,
+        address: ethMeta.address,
+        password: '',
+      );
+      //Getting the verified message
+
+      final verifiedMessage =
+          await API.getVerifiedToken(ethMeta.address, signedBytes);
+      if (verifiedMessage == "Token verified") {
+        await ethMeta.connector.killSession();
+        return await API.metamaskLogin(ethMeta.address);
+      }
+      return Future.value(false);
+      // connector.killSession();
+    } catch (e) {
+      print('===ethereumSign ERROR===  ' + e.toString().substring(60));
+      showCustomSnackBar(text: e.toString().substring(60), color: kColorDanger);
+      return Future.value(false);
+    }
   }
 }

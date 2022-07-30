@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 
 import '../../GlobalConstants.dart' as gc;
-import '../NFT/NFT2.dart';
+import '../NFT/NFT.dart';
 part 'UserData.g.dart';
 
 @HiveType(typeId: gc.kUSERDATA)
@@ -37,7 +37,7 @@ class UserData extends HiveObject {
   DateTime updatedAt;
 
   @HiveField(10)
-  List<NFT2> myNFTList;
+  List<NFT> myNFTList;
 
   UserData({
     required this.token,

@@ -18,45 +18,33 @@ class NFTAdapter extends TypeAdapter<NFT> {
     };
     return NFT(
       id: fields[0] as int,
-      tokenID: fields[1] as int,
-      name: fields[2] as String,
-      imageURL: fields[3] as String,
-      type: fields[4] as String,
-      openseaLink: fields[5] as String,
-      claimable: fields[6] as int,
-      collectionID: fields[7] as int,
-      collectionContractAddress: fields[8] as String,
-      collectionName: fields[9] as String,
-      collectionType: fields[10] as String,
+      userID: fields[1] as int,
+      nftID: fields[2] as int,
+      createdAt: fields[4] as DateTime,
+      updatedAt: fields[5] as DateTime,
+      merchandise: fields[6] as Merchandise,
+      number: fields[3] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, NFT obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.tokenID)
+      ..write(obj.userID)
       ..writeByte(2)
-      ..write(obj.name)
+      ..write(obj.nftID)
       ..writeByte(3)
-      ..write(obj.imageURL)
+      ..write(obj.number)
       ..writeByte(4)
-      ..write(obj.type)
+      ..write(obj.createdAt)
       ..writeByte(5)
-      ..write(obj.openseaLink)
+      ..write(obj.updatedAt)
       ..writeByte(6)
-      ..write(obj.claimable)
-      ..writeByte(7)
-      ..write(obj.collectionID)
-      ..writeByte(8)
-      ..write(obj.collectionContractAddress)
-      ..writeByte(9)
-      ..write(obj.collectionName)
-      ..writeByte(10)
-      ..write(obj.collectionType);
+      ..write(obj.merchandise);
   }
 
   @override

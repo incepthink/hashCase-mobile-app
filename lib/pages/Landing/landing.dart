@@ -2,13 +2,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hash_case/pages/Gallery.dart';
 import 'package:hash_case/pages/Onboarding/Onboarding1.dart';
 
-import '../GlobalConstants.dart';
-import '../services/api.dart';
-import 'login.dart';
-import 'mynft.dart';
+import '../../GlobalConstants.dart';
+import '../../services/api.dart';
+import 'gallery/gallery.dart';
+import 'my_nft/my_nft.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({Key? key}) : super(key: key);
@@ -22,14 +21,6 @@ class _LandingPageState extends State<LandingPage> {
   final pageController = PageController();
   _changePageIndex(newIndex) {
     if (newIndex == 2) {
-      // Navigator.of(context).push(
-      //   MaterialPageRoute(
-      //     builder: (context) => const LoginPage(),
-      //   ),
-      // );
-      return;
-    }
-    if (newIndex == 3) {
       final api = API();
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -49,8 +40,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
-    final api = API();
-    api.getCollections();
+    API.getCollections();
   }
 
   @override
@@ -90,13 +80,13 @@ class _LandingPageState extends State<LandingPage> {
                       activeIcon: SvgPicture.asset('assets/icons/wallet.svg',
                           color: Colors.white)),
                   BottomNavigationBarItem(
-                      icon:
-                          SvgPicture.asset('assets/icons/bookmark_outline.svg'),
-                      label: 'Saved',
-                      activeIcon: SvgPicture.asset(
-                          'assets/icons/bookmark_outline.svg',
+                      backgroundColor: Colors.transparent,
+                      icon: SvgPicture.asset('assets/icons/wallet.svg'),
+                      label: 'My NFTs',
+                      activeIcon: SvgPicture.asset('assets/icons/wallet.svg',
                           color: Colors.white)),
                   BottomNavigationBarItem(
+                    backgroundColor: Colors.transparent,
                     icon: SvgPicture.asset('assets/icons/user.svg'),
                     label: 'Profile',
                     activeIcon: SvgPicture.asset('assets/icons/user.svg',
@@ -125,9 +115,9 @@ class _LandingPageState extends State<LandingPage> {
               controller: pageController,
               onPageChanged: (index) => _changePageIndex(index),
               physics: const BouncingScrollPhysics(),
-              children: [
+              children: const [
                 GalleryPage(),
-                const MyNFTs(),
+                MyNFTs(),
               ],
             ),
           ],

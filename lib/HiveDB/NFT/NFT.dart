@@ -1,3 +1,4 @@
+import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
 import 'package:hive/hive.dart';
 
 import '../../GlobalConstants.dart' as gc;
@@ -9,62 +10,47 @@ class NFT extends HiveObject {
   int id;
 
   @HiveField(1)
-  int tokenID;
+  int userID;
 
   @HiveField(2)
-  String name;
+  int nftID;
 
   @HiveField(3)
-  String imageURL;
+  int? number;
 
   @HiveField(4)
-  String type;
+  DateTime createdAt;
 
   @HiveField(5)
-  String openseaLink;
+  DateTime updatedAt;
 
   @HiveField(6)
-  int claimable;
-
-  @HiveField(7)
-  int collectionID;
-
-  @HiveField(8)
-  String collectionContractAddress;
-
-  @HiveField(9)
-  String collectionName;
-
-  @HiveField(10)
-  String collectionType;
+  Merchandise merchandise;
 
   NFT({
     required this.id,
-    required this.tokenID,
-    required this.name,
-    required this.imageURL,
-    required this.type,
-    required this.openseaLink,
-    required this.claimable,
-    required this.collectionID,
-    required this.collectionContractAddress,
-    required this.collectionName,
-    required this.collectionType,
+    required this.userID,
+    required this.nftID,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.merchandise,
+    this.number,
   });
 
   factory NFT.fromMap(Map data) {
     return NFT(
       id: data['id'] ?? -1,
-      tokenID: data['token_id'] ?? -1,
-      name: data['name'] ?? '-',
-      imageURL: data['nft_image_url'] ?? '-',
-      type: data['type'] ?? '-',
-      openseaLink: data['opensea_link'] ?? '-',
-      claimable: data['claimable'] ?? -1,
-      collectionID: data['collection.id'] ?? -1,
-      collectionContractAddress: data['collection.contract_address'] ?? '-',
-      collectionName: data['collection.name'] ?? '-',
-      collectionType: data['collection.type'] ?? '-',
+      userID: data['user_id'] ?? -1,
+      nftID: data['nft_id'] ?? -1,
+      createdAt: DateTime.parse(data['createdAt'] ?? '2000-01-01 00:00:01'),
+      updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
+      merchandise: Merchandise.fromMap(data['merchandise']),
+      number: data['number'] ?? -1,
     );
+  }
+
+  @override
+  String toString() {
+    return 'NFT2{id: $id, userID: $userID, nftID: $nftID, number: $number, createdAt: $createdAt, updatedAt: $updatedAt, merchandise: $merchandise}';
   }
 }

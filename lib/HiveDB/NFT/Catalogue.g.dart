@@ -1,22 +1,22 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'HcNFT.dart';
+part of 'Catalogue.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class HcNFTAdapter extends TypeAdapter<HcNFT> {
+class CatalogueAdapter extends TypeAdapter<Catalogue> {
   @override
   final int typeId = 2;
 
   @override
-  HcNFT read(BinaryReader reader) {
+  Catalogue read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return HcNFT(
+    return Catalogue(
       id: fields[0] as int,
       contractAddress: fields[1] as String,
       name: fields[3] as String,
@@ -35,7 +35,7 @@ class HcNFTAdapter extends TypeAdapter<HcNFT> {
   }
 
   @override
-  void write(BinaryWriter writer, HcNFT obj) {
+  void write(BinaryWriter writer, Catalogue obj) {
     writer
       ..writeByte(14)
       ..writeByte(0)
@@ -74,7 +74,7 @@ class HcNFTAdapter extends TypeAdapter<HcNFT> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is HcNFTAdapter &&
+      other is CatalogueAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

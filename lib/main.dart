@@ -1,33 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hash_case/HiveDB/NFT/HcNFT.dart';
-import 'package:hash_case/HiveDB/NFT/HcNFTList.dart';
+import 'package:hash_case/HiveDB/NFT/Catalogue.dart';
 import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
-import 'package:hash_case/HiveDB/NFT/NFT2.dart';
+import 'package:hash_case/HiveDB/NFT/NFT.dart';
 import 'package:hash_case/pages/Onboarding/Onboarding1.dart';
-import 'package:hash_case/pages/landing.dart';
-import 'package:hash_case/pages/login.dart';
+import 'package:hash_case/pages/Landing/landing.dart';
 import 'package:hash_case/services/api.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'HiveDB/NFT/NFT.dart';
+import 'GlobalWidgets/custom_snackbar.dart';
 import 'HiveDB/UserData/UserData.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(UserDataAdapter());
-  // Hive.registerAdapter(NFTAdapter());
-  Hive.registerAdapter(NFT2Adapter());
-  Hive.registerAdapter(HcNFTAdapter());
-  Hive.registerAdapter(HcNFTListAdapter());
+  Hive.registerAdapter(NFTAdapter());
+  Hive.registerAdapter(CatalogueAdapter());
   Hive.registerAdapter(MerchandiseAdapter());
   await Hive.openBox('globalBox');
-  // final api = API();
-  // await api.getCollections();
-  // await Hive.deleteBoxFromDisk('globalBox');
+  await Hive.openBox<Catalogue>('catalogueNFT');
+
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then(
     (value) => runApp(
@@ -58,6 +53,7 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(
                 primarySwatch: Colors.blue,
               ),
+              scaffoldMessengerKey: snackbarKey,
               home: box.containsKey('userData')
                   ? const LandingPage()
                   : const OnboardingPage1(),

@@ -41,6 +41,7 @@ BoxDecoration kDebugDecoration =
     BoxDecoration(border: Border.all(color: Colors.purple), color: Colors.red);
 
 const Color kColorCta = Color(0xff13B1E6);
+const Color kColorDanger = Color(0xffff6961);
 const Color kColorGreySecondary = Color(0xffCCCCCC);
 
 const LinearGradient kGradientG1 = LinearGradient(colors: [

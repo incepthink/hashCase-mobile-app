@@ -1,10 +1,10 @@
 import 'package:hive/hive.dart';
 
 import '../../GlobalConstants.dart' as gc;
-part 'HcNFT.g.dart';
+part 'Catalogue.g.dart';
 
 @HiveType(typeId: gc.kHcNFT)
-class HcNFT extends HiveObject {
+class Catalogue extends HiveObject {
   @HiveField(0)
   int id;
 
@@ -47,7 +47,7 @@ class HcNFT extends HiveObject {
   @HiveField(13)
   String? websiteLink;
 
-  HcNFT({
+  Catalogue({
     required this.id,
     required this.contractAddress,
     required this.name,
@@ -64,8 +64,8 @@ class HcNFT extends HiveObject {
     this.websiteLink,
   });
 
-  factory HcNFT.fromMap(Map data) {
-    return HcNFT(
+  factory Catalogue.fromMap(Map data) {
+    return Catalogue(
       id: data['id'] ?? -1,
       contractAddress: data['contract_address'] ?? '-',
       websiteLink: data['website_link'] ?? '-',
