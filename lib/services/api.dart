@@ -142,39 +142,37 @@ class API {
   }
 
   static Future fetchEmailNFTs() async {
-    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
-    if (address == null) {
-      final globalBox = Hive.box('globalBox');
-      final UserData userData = globalBox.get('userData');
-      // var userId = await StorageService.userStorage.read(key: 'user');
-      int userID = userData.id;
-
-      final response = await http.get(
-        Uri.parse('${Endpoints.baseURL}/localnft/getNftsOfUser/$userID'),
-      );
-      if (response.statusCode == 200) {
-        print('===SUCCESS fetchLocalNfts===');
-        List<NFT> localNFTs = [];
-        if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
-        List<dynamic> data = jsonDecode(response.body);
-        data.forEach((value) {
-          NFT nft = NFT.fromMap(value);
-          var preExistingNft = localNFTs
-              .firstWhereOrNull((element) => element.nftID == nft.nftID);
-          if (preExistingNft == null) localNFTs.add(nft);
-        });
-        userData.myNFTList = localNFTs;
-        await globalBox.put('userData', userData);
-        return response.body;
-      } else {
-        print("===ERROR fetchLocalNfts===");
-        // print(response.body);
-        throw Exception(response.body);
-      }
+    final globalBox = Hive.box('globalBox');
+    final UserData userData = globalBox.get('userData');
+    if (userData.email == '-') {
+      return;
+    }
+    int userID = userData.id;
+    final response = await http.get(
+      Uri.parse('${Endpoints.baseURL}/localnft/getNftsOfUser/$userID'),
+    );
+    if (response.statusCode == 200) {
+      print('===SUCCESS fetchEmailNfts===');
+      List<NFT> localNFTs = [];
+      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      List<dynamic> data = jsonDecode(response.body);
+      data.forEach((value) {
+        NFT nft = NFT.fromMap(value);
+        var preExistingNft =
+            localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
+        if (preExistingNft == null) localNFTs.add(nft);
+      });
+      userData.myNFTList = localNFTs;
+      await globalBox.put('userData', userData);
+      return response.body;
+    } else {
+      print("===ERROR fetchLocalNfts===");
+      // print(response.body);
+      throw Exception(response.body);
     }
   }
 
-  static Future fetchWalletNfts() async {
+  static Future fetchWalletNFTs() async {
     var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     if (address != null) {
       final token = await SmartContractFunction.smartContracts();
@@ -194,19 +192,35 @@ class API {
         // print(response.body);
         print('===success===');
         List<NFT> localNFTs = [];
-        List<dynamic> data = jsonDecode(response.body);
-        for (var nft in data) {
-          if (nft != null) {
-            localNFTs.add(NFT(
-              merchandise: Merchandise.fromMap(nft),
+        if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+        List<dynamic> data = await jsonDecode(response.body);
+        data.forEach((value) {
+          if (value != null) {
+            NFT nft = NFT(
+              merchandise: Merchandise.fromMap(value),
               nftID: -1,
               id: -1,
               updatedAt: DateTime.parse('2000-01-01 00:00:01'),
               userID: -1,
               createdAt: DateTime.parse('2000-01-01 00:00:01'),
-            ));
+            );
+            var preExistingNft = localNFTs.firstWhereOrNull(
+                (element) => element.merchandise.id == nft.merchandise.id);
+            if (preExistingNft == null) localNFTs.add(nft);
           }
-        }
+        });
+        // for (var nft in data) {
+        //   if (nft != null) {
+        //     localNFTs.add(NFT(
+        //       merchandise: Merchandise.fromMap(nft),
+        //       nftID: -1,
+        //       id: -1,
+        //       updatedAt: DateTime.parse('2000-01-01 00:00:01'),
+        //       userID: -1,
+        //       createdAt: DateTime.parse('2000-01-01 00:00:01'),
+        //     ));
+        //   }
+        // }
         userData.myNFTList = localNFTs;
         await globalBox.put('userData', userData);
         return response.body;
@@ -251,7 +265,7 @@ class API {
     }
   }
 
-  signOut() async {
+  static signOut() async {
     final globalBox = Hive.box('globalBox');
     globalBox.delete('userData');
     await StorageService.JWTStorage.deleteAll();
@@ -284,7 +298,6 @@ class API {
 
       await StorageService.JWTStorage.write(
           key: 'wallet_address', value: connector.session.accounts[0]);
-
       return EthereumMetadata(
         address: connector.session.accounts[0],
         uri: _uri,
@@ -329,6 +342,48 @@ class API {
       print('===ethereumSign ERROR===  ' + e.toString().substring(60));
       showCustomSnackBar(text: e.toString().substring(60), color: kColorDanger);
       return Future.value(false);
+    }
+  }
+
+  static Future<Result<Exception, bool>> connectEmail(
+      String email, String password) async {
+    try {
+      final globalBox = Hive.box('globalBox');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/login');
+      final response =
+          await http.post(uri, body: {'email': email, 'password': password});
+      final data = json.decode(response.body);
+
+      switch (response.statusCode) {
+        case 200:
+          final UserData userData = globalBox.get('userData');
+          userData.email = email;
+          final userID = data['user_instance'] != null
+              ? data['user_instance']['id'] ?? '-'
+              : data['id'] ?? '-';
+          userData.id = userID;
+          await globalBox.put('userData', userData);
+          print('===updated UserData===');
+          return const Success(true);
+        case 500:
+          String message;
+          switch (data["message"]) {
+            case "User does not exist":
+              message = "User with given credentials does not exist!";
+              break;
+            case "Wrong Password":
+              message = "Wrong Password";
+              break;
+            default:
+              message = "Error Signing in";
+          }
+          return Error(Exception(message));
+        default:
+          return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
     }
   }
 }

@@ -53,9 +53,9 @@ class _GalleryPageState extends State<GalleryPage> {
             onTap: () async {
               SmartContractFunction.smartContracts();
             },
-            child: Text(
-              'Catalogue',
-              style: kTextStyleArcadeClassic.copyWith(fontSize: 32),
+            child: const Text(
+              'CATALOGUE',
+              style: kTextStyleGotham,
             ),
           ),
           centerTitle: true,
@@ -130,16 +130,20 @@ class _GalleryPageState extends State<GalleryPage> {
                 builder: (context, Box<Catalogue> box, _) {
                   List<Catalogue> displayList = box.values.toList();
                   if (displayList.isEmpty) {
-                    return const SliverToBoxAdapter(
+                    return SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 50),
-                        child: SizedBox(
-                          height: 30,
-                          width: 30,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
+                        padding: const EdgeInsets.only(top: 50),
+                        child: Row(
+                          children: const [
+                            SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );

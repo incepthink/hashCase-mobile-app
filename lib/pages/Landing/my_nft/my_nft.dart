@@ -24,7 +24,7 @@ class _MyNFTsState extends State<MyNFTs> {
   _getData() async {
     isLoading.value = true;
     await API.fetchEmailNFTs();
-    await API.fetchWalletNfts();
+    await API.fetchWalletNFTs();
     isLoading.value = false;
   }
 
@@ -35,9 +35,9 @@ class _MyNFTsState extends State<MyNFTs> {
           30, MediaQuery.of(context).padding.top + 15, 30, 0),
       child: Column(
         children: [
-          Text(
-            'MY NFTs',
-            style: kTextStyleArcadeClassic.copyWith(fontSize: 32),
+          const Text(
+            'MY NFTS',
+            style: kTextStyleGotham,
           ),
           ValueListenableBuilder(
             valueListenable: globalBox.listenable(keys: ['userData']),
@@ -62,9 +62,9 @@ class _MyNFTsState extends State<MyNFTs> {
                         ),
                       );
                     }
-                    return Container(
-                      padding: const EdgeInsets.only(top: 50),
-                      child: const Text(
+                    return const Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Text(
                         'No NFTs to display',
                         style: kTextStyleBody,
                       ),

@@ -37,6 +37,11 @@ const TextStyle kTextStyleSecondary = TextStyle(
     fontSize: 12,
     color: Colors.white);
 
+const TextStyle kTextStyleGotham = TextStyle(
+  fontFamily: 'GothamPro',
+  color: Colors.white,
+  fontSize: 24,
+);
 BoxDecoration kDebugDecoration =
     BoxDecoration(border: Border.all(color: Colors.purple), color: Colors.red);
 
