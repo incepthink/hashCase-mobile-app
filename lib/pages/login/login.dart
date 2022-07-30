@@ -22,7 +22,8 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _animationDuration = const Duration(milliseconds: 3000);
-  final isLoading = ValueNotifier<bool>(false);
+  final isLoadingEmail = ValueNotifier<bool>(false);
+  final isLoadingMetamask = ValueNotifier<bool>(false);
   double _fromY = 155;
   @override
   void initState() {
@@ -50,16 +51,26 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _handleSingIn() async {
+    isEmail(value) => RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(value);
     final String email = _emailController.text;
     final String password = _passwordController.text.trim();
-    if (password.length < 2) {
+    if (email.isEmpty || !isEmail(email)) {
       showCustomSnackBar(
-        text: "Please Enter a password",
+        text: "Please enter a valid email",
         color: kColorDanger,
       );
       return;
     }
-    isLoading.value = true;
+    if (password.length < 2) {
+      showCustomSnackBar(
+        text: "Please enter a password",
+        color: kColorDanger,
+      );
+      return;
+    }
+    isLoadingEmail.value = true;
     final result = await API.signIn(email, password);
     result.when(
       (exception) => showCustomSnackBar(
@@ -70,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
         MaterialPageRoute(builder: (context) => const LandingPage()),
       ),
     );
-    isLoading.value = false;
+    isLoadingEmail.value = false;
   }
 
   @override
@@ -164,17 +175,6 @@ class _LoginPageState extends State<LoginPage> {
                                               color: Colors.white54),
                                         ),
                                         child: TextFormField(
-                                          validator: (value) {
-                                            isEmail(value) => RegExp(
-                                                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                                                .hasMatch(value);
-                                            if (value!.isEmpty) {
-                                              return 'Enter Email or Phone linked to your account';
-                                            }
-                                            return !isEmail(value)
-                                                ? 'Enter a valid Email or Phone'
-                                                : null;
-                                          },
                                           controller: _emailController,
                                           style: kTextStyleBody,
                                           decoration: InputDecoration(
@@ -306,12 +306,12 @@ class _LoginPageState extends State<LoginPage> {
                                             ),
                                             width: double.infinity,
                                             child: ValueListenableBuilder(
-                                              valueListenable: isLoading,
+                                              valueListenable: isLoadingEmail,
                                               builder: (context, box, value) {
                                                 return Material(
                                                   color: Colors.transparent,
                                                   child: Center(
-                                                    child: isLoading.value
+                                                    child: isLoadingEmail.value
                                                         ? const SizedBox(
                                                             height: 25,
                                                             width: 25,
@@ -338,9 +338,14 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       InkWell(
                                         onTap: () async {
+                                          isLoadingMetamask.value = true;
                                           final ethMeta =
                                               await API.ethereumConnect();
-                                          API.ethereumSign(ethMeta).then(
+                                          API
+                                              .ethereumSign(
+                                            ethMeta,
+                                          )
+                                              .then(
                                             (value) {
                                               if (value) {
                                                 Navigator.of(context).push(
@@ -359,35 +364,65 @@ class _LoginPageState extends State<LoginPage> {
                                                   ),
                                                 );
                                               }
+                                              isLoadingMetamask.value = false;
                                             },
                                           );
                                         },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: kColorCta.withOpacity(0.2),
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                              Radius.circular(4),
-                                            ),
-                                          ),
-                                          width: double.infinity,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              SvgPicture.asset(
-                                                  'assets/icons/metamask-icon.svg'),
-                                              const SizedBox(width: 15),
-                                              Text(
-                                                'Continue with Metamask',
-                                                style: kTextStyleH1.copyWith(
-                                                    fontSize: 16),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                        child: ValueListenableBuilder(
+                                            valueListenable: isLoadingMetamask,
+                                            builder:
+                                                (context, bool value, child) {
+                                              return Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 12),
+                                                decoration: BoxDecoration(
+                                                  color: kColorCta
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                    Radius.circular(4),
+                                                  ),
+                                                ),
+                                                width: double.infinity,
+                                                child: value
+                                                    ? Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: const [
+                                                          SizedBox(
+                                                            height: 25,
+                                                            width: 25,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              color:
+                                                                  Colors.white,
+                                                              strokeWidth: 3,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      )
+                                                    : Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          SvgPicture.asset(
+                                                              'assets/icons/metamask-icon.svg'),
+                                                          const SizedBox(
+                                                              width: 15),
+                                                          Text(
+                                                            'Continue with Metamask',
+                                                            style: kTextStyleH1
+                                                                .copyWith(
+                                                                    fontSize:
+                                                                        16),
+                                                          ),
+                                                        ],
+                                                      ),
+                                              );
+                                            }),
                                       ),
                                       const SizedBox(height: 20),
                                       Row(
@@ -403,10 +438,10 @@ class _LoginPageState extends State<LoginPage> {
                                                   text: 'Sign up',
                                                   style:
                                                       kTextStyleBody2.copyWith(
-                                                          fontSize: 14,
-                                                          color: kColorCta,
-                                                          fontWeight:
-                                                              FontWeight.w700),
+                                                    fontSize: 14,
+                                                    color: kColorCta,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                                 ),
                                               ],
                                             ),

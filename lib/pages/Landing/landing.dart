@@ -18,24 +18,11 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
-  int currentIndex = 0;
+  final currentIndex = ValueNotifier<int>(0);
   final pageController = PageController();
   _changePageIndex(newIndex) {
-    if (newIndex == 3) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const OnboardingPage1(),
-        ),
-      );
-      API.signOut();
-      return;
-    }
-    setState(() {
-      currentIndex = newIndex;
-      // pageController.jumpToPage(newIndex);
-      pageController.animateToPage(newIndex,
-          curve: Curves.ease, duration: const Duration(milliseconds: 600));
-    });
+    pageController.animateToPage(newIndex,
+        curve: Curves.ease, duration: const Duration(milliseconds: 600));
   }
 
   @override
@@ -53,75 +40,72 @@ class _LandingPageState extends State<LandingPage> {
       child: Scaffold(
         extendBody: true,
         backgroundColor: Color(0xff001217),
-        bottomNavigationBar: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 40.0, sigmaY: 40.0),
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.4), BlendMode.srcOver),
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                selectedLabelStyle:
-                    kTextStyleSecondary.copyWith(fontWeight: FontWeight.w600),
-                unselectedLabelStyle: kTextStyleSecondary,
-                unselectedItemColor: kColorGreySecondary,
-                selectedItemColor: Colors.white,
-                onTap: (index) => _changePageIndex(index),
-                currentIndex: currentIndex,
-                items: [
-                  BottomNavigationBarItem(
-                    // backgroundColor: Colors.transparent,
-                    icon: SvgPicture.asset(
-                      'assets/icons/home.svg',
-                      color: kColorGreySecondary,
+        bottomNavigationBar: ValueListenableBuilder(
+            valueListenable: currentIndex,
+            builder: (context, int value, child) {
+              return ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 40.0, sigmaY: 40.0),
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.4), BlendMode.srcOver),
+                    child: BottomNavigationBar(
+                      backgroundColor: Colors.transparent,
+                      selectedLabelStyle: kTextStyleSecondary.copyWith(
+                          fontWeight: FontWeight.w600),
+                      unselectedLabelStyle: kTextStyleSecondary,
+                      unselectedItemColor: kColorGreySecondary,
+                      selectedItemColor: Colors.white,
+                      onTap: (index) => _changePageIndex(index),
+                      currentIndex: currentIndex.value,
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            'assets/icons/home.svg',
+                            color: kColorGreySecondary,
+                          ),
+                          label: 'Home',
+                          activeIcon: SvgPicture.asset(
+                            'assets/icons/home.svg',
+                            color: Colors.white,
+                          ),
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset('assets/icons/wallet.svg'),
+                          label: 'My NFTs',
+                          activeIcon: SvgPicture.asset(
+                            'assets/icons/wallet.svg',
+                            color: Colors.white,
+                          ),
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset('assets/icons/user.svg'),
+                          label: 'Profile',
+                          activeIcon: SvgPicture.asset(
+                            'assets/icons/user.svg',
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                    label: 'Home',
-                    activeIcon: SvgPicture.asset(
-                      'assets/icons/home.svg',
-                      color: Colors.white,
-                    ),
                   ),
-                  BottomNavigationBarItem(
-                    // backgroundColor: Colors.transparent,
-                    icon: SvgPicture.asset('assets/icons/wallet.svg'),
-                    label: 'My NFTs',
-                    activeIcon: SvgPicture.asset('assets/icons/wallet.svg',
-                        color: Colors.white),
-                  ),
-                  BottomNavigationBarItem(
-                    // backgroundColor: Colors.transparent,
-                    icon: SvgPicture.asset('assets/icons/user.svg'),
-                    label: 'Profile',
-                    activeIcon: SvgPicture.asset('assets/icons/user.svg',
-                        color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+                ),
+              );
+            }),
         body: Stack(
           children: [
-            // ColorFiltered(
-            //   colorFilter: ColorFilter.mode(
-            //       Colors.black.withOpacity(0), BlendMode.srcOver),
-            //   child:
             Container(
               decoration: const BoxDecoration(
-                // image: DecorationImage(
-                //   image: AssetImage("assets/images/background.png"),
-                //   fit: BoxFit.cover,
-                // ),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [Color(0xff082730), Color(0xff03161B)],
                 ),
               ),
-              // ),
             ),
             PageView(
               controller: pageController,
+              onPageChanged: (index) => currentIndex.value = index,
               physics: const BouncingScrollPhysics(),
               children: [
                 const GalleryPage(),

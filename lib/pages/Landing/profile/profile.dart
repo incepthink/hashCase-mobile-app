@@ -27,20 +27,32 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
-  _handleConnect() async {
+  Future<bool> _handleConnect() async {
     final email = emailController.text;
     final password = passwordController.text;
-    print(email);
-    print(password);
+    final confirmPassword = confirmPasswordController.text;
+    if (password.isEmpty) {
+      showCustomSnackBar(
+        text: "Please Enter a valid password",
+      );
+      return false;
+    }
+    if (confirmPassword != password) {
+      showCustomSnackBar(text: "Passwords don't match");
+      return false;
+    }
+    isLoading.value = true;
     final Result result = await API.connectEmail(email, password);
     result.when(
       (error) => showCustomSnackBar(
-        text: error.toString(),
+        text: error.toString().substring(10),
       ),
       (success) {
         showCustomSnackBar(text: "Email Connected");
       },
     );
+    isLoading.value = false;
+    return true;
   }
 
   @override
@@ -93,7 +105,7 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 20,
                 ),
                 ValueListenableBuilder(
@@ -103,7 +115,7 @@ class ProfilePage extends StatelessWidget {
                       final UserData userData = box.get('userData');
                       if (userData.email != '-') {
                         return Container(
-                          margin: EdgeInsets.only(bottom: 20),
+                          margin: const EdgeInsets.only(bottom: 20),
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 15, vertical: 10),
@@ -139,7 +151,7 @@ class ProfilePage extends StatelessWidget {
                     UserData userData = box.get('userData');
                     if (userData.walletAddress != '-') {
                       return Container(
-                        margin: EdgeInsets.only(bottom: 20),
+                        margin: const EdgeInsets.only(bottom: 20),
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 15, vertical: 10),
@@ -178,22 +190,38 @@ class ProfilePage extends StatelessWidget {
                   builder: (context, Box box, child) {
                     UserData userData = box.get('userData');
                     if (userData.walletAddress == '-') {
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 10),
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 15),
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(4),
+                      return InkWell(
+                        onTap: () async {
+                          final ethMeta = await API.ethereumConnect();
+                          API
+                              .ethereumSign(ethMeta, connect: true)
+                              .then((value) {
+                            if (value) {
+                              showCustomSnackBar(text: 'Wallet Connected');
+                            } else {
+                              showCustomSnackBar(
+                                  text: 'Connection Failed',
+                                  color: kColorDanger);
+                            }
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 15),
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                            color: kColorCta,
                           ),
-                          color: kColorCta,
-                        ),
-                        child: Text(
-                          'Connect Wallet',
-                          style: kTextStyleBody.copyWith(
-                              fontWeight: FontWeight.w600),
+                          child: Text(
+                            'Connect Wallet',
+                            style: kTextStyleBody.copyWith(
+                                fontWeight: FontWeight.w600),
+                          ),
                         ),
                       );
                     } else {
@@ -464,10 +492,16 @@ class ProfilePage extends StatelessWidget {
                                                           child: TextField(
                                                             onSubmitted:
                                                                 (_) async {
-                                                              await _handleConnect();
-                                                              Navigator.of(
-                                                                      context)
-                                                                  .pop();
+                                                              _handleConnect()
+                                                                  .then(
+                                                                (value) {
+                                                                  if (value) {
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  }
+                                                                },
+                                                              );
                                                             },
                                                             controller:
                                                                 confirmPasswordController,
@@ -542,67 +576,71 @@ class ProfilePage extends StatelessWidget {
                                                   const SizedBox(height: 6),
                                                   InkWell(
                                                     onTap: () async {
-                                                      await _handleConnect();
-                                                      Navigator.of(context)
-                                                          .pop();
+                                                      _handleConnect().then(
+                                                        (value) {
+                                                          if (value) {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          }
+                                                        },
+                                                      );
                                                     },
                                                     child:
                                                         ValueListenableBuilder(
-                                                            valueListenable:
-                                                                isLoading,
-                                                            builder: (context,
-                                                                bool value,
-                                                                child) {
-                                                              if (value) {
-                                                                return const SizedBox(
-                                                                  height: 25,
-                                                                  width: 25,
-                                                                  child:
-                                                                      CircularProgressIndicator(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    strokeWidth:
-                                                                        3,
-                                                                  ),
-                                                                );
-                                                              }
-                                                              return Container(
-                                                                margin: const EdgeInsets
-                                                                        .symmetric(
-                                                                    vertical:
-                                                                        16),
-                                                                padding: const EdgeInsets
-                                                                        .symmetric(
-                                                                    vertical:
-                                                                        16),
-                                                                decoration:
-                                                                    const BoxDecoration(
-                                                                  color:
-                                                                      kColorCta,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .all(
-                                                                    Radius
-                                                                        .circular(
-                                                                            4),
-                                                                  ),
-                                                                ),
-                                                                width: double
-                                                                    .infinity,
-                                                                child: Material(
-                                                                  color: Colors
-                                                                      .transparent,
-                                                                  child: Center(
-                                                                    child: Text(
+                                                      valueListenable:
+                                                          isLoading,
+                                                      builder: (context,
+                                                          bool value, child) {
+                                                        return Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                      .symmetric(
+                                                                  vertical: 16),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                      .symmetric(
+                                                                  vertical: 16),
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                            color: kColorCta,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .all(
+                                                              Radius.circular(
+                                                                  4),
+                                                            ),
+                                                          ),
+                                                          width:
+                                                              double.infinity,
+                                                          child: Material(
+                                                            color: Colors
+                                                                .transparent,
+                                                            child: Center(
+                                                              child: value
+                                                                  ? const SizedBox(
+                                                                      height:
+                                                                          25,
+                                                                      width: 25,
+                                                                      child:
+                                                                          CircularProgressIndicator(
+                                                                        color: Colors
+                                                                            .white,
+                                                                        strokeWidth:
+                                                                            3,
+                                                                      ),
+                                                                    )
+                                                                  : Text(
                                                                       'Connect',
                                                                       style: kTextStyleH1.copyWith(
                                                                           fontSize:
                                                                               16),
                                                                     ),
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            }),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
                                                   ),
                                                   const SizedBox(height: 20),
                                                 ],
@@ -618,7 +656,7 @@ class ProfilePage extends StatelessWidget {
                             );
                           },
                           child: Container(
-                            margin: EdgeInsets.only(bottom: 10),
+                            margin: const EdgeInsets.only(bottom: 10),
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 15),
@@ -650,7 +688,7 @@ class ProfilePage extends StatelessWidget {
                     API.signOut;
                   },
                   child: Container(
-                    margin: EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(bottom: 10),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 15),

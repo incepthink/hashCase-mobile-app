@@ -134,6 +134,7 @@ class _GalleryPageState extends State<GalleryPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 50),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                             SizedBox(
                               height: 30,

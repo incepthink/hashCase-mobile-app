@@ -54,20 +54,14 @@ class API {
     if (response.statusCode == 200) {
       try {
         final res = jsonDecode(response.body);
-        // print(res);
+
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
         final UserData userData = UserData.fromMap(res);
         await globalBox.put('userData', userData);
 
-        // ===DEPRECIATED===
-        // await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
-        // await StorageService.userStorage
-        //     .write(key: 'user', value: res['user_instance']['id'].toString());
-
-        print('===Updated User Data===');
-        // print(userData);
+        print('===METAMASK LOGIN Updated User Data===');
         return Future.value(true);
       } catch (e) {
         print("Error updating USER PROFILE: ${e.toString()}");
@@ -310,7 +304,8 @@ class API {
     }
   }
 
-  static Future<bool> ethereumSign(EthereumMetadata ethMeta) async {
+  static Future<bool> ethereumSign(EthereumMetadata ethMeta,
+      {bool connect = false}) async {
     try {
       if (!ethMeta.connector.connected) {
         print('not connected');
@@ -334,10 +329,13 @@ class API {
           await API.getVerifiedToken(ethMeta.address, signedBytes);
       if (verifiedMessage == "Token verified") {
         await ethMeta.connector.killSession();
+        if (connect) {
+          await API.connectMetamask(ethMeta.address);
+          return true;
+        }
         return await API.metamaskLogin(ethMeta.address);
       }
-      return Future.value(false);
-      // connector.killSession();
+      return Future.value(true);
     } catch (e) {
       print('===ethereumSign ERROR===  ' + e.toString().substring(60));
       showCustomSnackBar(text: e.toString().substring(60), color: kColorDanger);
@@ -364,6 +362,45 @@ class API {
           userData.id = userID;
           await globalBox.put('userData', userData);
           print('===updated UserData===');
+          return const Success(true);
+        case 500:
+          String message;
+          switch (data["message"]) {
+            case "User does not exist":
+              message = "User with given credentials does not exist!";
+              break;
+            case "Wrong Password":
+              message = "Wrong Password";
+              break;
+            default:
+              message = "Error Signing in";
+          }
+          return Error(Exception(message));
+        default:
+          return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
+    }
+  }
+
+  static Future<Result<Exception, bool>> connectMetamask(
+      String walletAddress) async {
+    try {
+      final globalBox = Hive.box('globalBox');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/getUser/$walletAddress');
+      final response = await http.get(uri);
+      final data = json.decode(response.body);
+      switch (response.statusCode) {
+        case 200:
+          final UserData userData = globalBox.get('userData');
+          userData.walletAddress = data['user_instance'] != null
+              ? data['user_instance']['wallet_address'] ?? '-'
+              : data['wallet_address'] ?? '-';
+
+          await globalBox.put('userData', userData);
+          print('===METAMASK CONNECT Updated UserData===');
           return const Success(true);
         case 500:
           String message;
