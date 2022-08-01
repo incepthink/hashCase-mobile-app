@@ -53,36 +53,36 @@ class UserData extends HiveObject {
     this.myNFTList = const [],
   });
 
-  factory UserData.fromMap(Map data) {
+  factory UserData.fromMetaMask(Map data) {
     return UserData(
       token: data['token'] ?? '-',
-      id: data['user_instance'] != null
-          ? data['user_instance']['id'] ?? '-'
-          : data['id'] ?? '-',
-      walletAddress: data['user_instance'] != null
-          ? data['user_instance']['wallet_address'] ?? '-'
-          : data['wallet_address'] ?? '-',
-      email: data['user_instance'] != null
-          ? data['user_instance']['email'] ?? '-'
-          : data['email'] ?? '-',
-      passwordHash: data['user_instance'] != null
-          ? data['user_instance']['password_hash'] ?? '-'
-          : data['password_hash'] ?? '-',
-      shippingID: data['user_instance'] != null
-          ? data['user_instance']['shipping_id'] ?? -1
-          : data['shipping_id'] ?? -1,
-      admin: data['user_instance'] != null
-          ? data['user_instance']['admin'] ?? false
-          : data['admin'] ?? false,
-      username: data['user_instance'] != null
-          ? data['user_instance']['username'] ?? '-'
-          : data['username'] ?? '-',
-      createdAt: DateTime.parse(data['user_instance'] != null
-          ? data['user_instance']['createdAt'] ?? '2000-01-01 00:00:01'
-          : data['createdAt'] ?? '2000-01-01 00:00:01'),
-      updatedAt: DateTime.parse(data['user_instance'] != null
-          ? data['user_instance']['updatedAt'] ?? '2000-01-01 00:00:01'
-          : data['updatedAt'] ?? '2000-01-01 00:00:01'),
+      id: data['id'] ?? '-',
+      walletAddress: data['wallet_address'] ?? '-',
+      email: data['email'] ?? '-',
+      passwordHash: data['password_hash'] ?? '-',
+      shippingID: data['shipping_id'] ?? -1,
+      admin: data['admin'] ?? false,
+      username: data['username'] ?? '-',
+      createdAt: DateTime.parse(data['createdAt'] ?? '2000-01-01 00:00:01'),
+      updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
+    );
+  }
+
+  factory UserData.fromEmail(Map data) {
+    final userInstance = data['user_instance'];
+    return UserData(
+      token: data['token'] ?? '-',
+      id: userInstance['id'] ?? '-',
+      walletAddress: userInstance['wallet_address'] ?? '-',
+      email: userInstance['email'] ?? '-',
+      passwordHash: userInstance['password_hash'] ?? '-',
+      shippingID: userInstance['shipping_id'] ?? -1,
+      admin: userInstance['admin'] ?? false,
+      username: userInstance['username'] ?? '-',
+      createdAt:
+          DateTime.parse(userInstance['createdAt'] ?? '2000-01-01 00:00:01'),
+      updatedAt:
+          DateTime.parse(userInstance['updatedAt'] ?? '2000-01-01 00:00:01'),
     );
   }
   @override

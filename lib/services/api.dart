@@ -58,7 +58,7 @@ class API {
         //store userData in Hive
         final globalBox = Hive.box('globalBox');
         if (globalBox.containsKey('userData')) globalBox.delete('userData');
-        final UserData userData = UserData.fromMap(res);
+        final UserData userData = UserData.fromMetaMask(res);
         await globalBox.put('userData', userData);
 
         print('===METAMASK LOGIN Updated User Data===');
@@ -88,7 +88,7 @@ class API {
       switch (response.statusCode) {
         case 200:
           if (globalBox.containsKey('userData')) globalBox.delete('userData');
-          final UserData userData = UserData.fromMap(data);
+          final UserData userData = UserData.fromEmail(data);
           await globalBox.put('userData', userData);
           await StorageService.JWTStorage.write(
               key: 'JWT', value: data['token']);
@@ -151,7 +151,7 @@ class API {
       if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
       List<dynamic> data = jsonDecode(response.body);
       data.forEach((value) {
-        NFT nft = NFT.fromMap(value);
+        NFT nft = NFT.fromEmail(value);
         var preExistingNft =
             localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
         if (preExistingNft == null) localNFTs.add(nft);
@@ -167,62 +167,44 @@ class API {
   }
 
   static Future fetchWalletNFTs() async {
-    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
-    if (address != null) {
-      final token = await SmartContractFunction.smartContracts();
-      final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-      final globalBox = Hive.box('globalBox');
+    // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
+    final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
+    final globalBox = Hive.box('globalBox');
+    final UserData userData = globalBox.get('userData');
+    final address = userData.walletAddress;
+    if (address == '-') {
+      return;
+    }
+    final token = await SmartContractFunction.smartContracts();
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $jwtToken',
+        },
+        body: jsonEncode(token));
 
-      final UserData userData = globalBox.get('userData');
-      final response = await http.post(
-          Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
-          headers: {
-            "Content-Type": "application/json",
-            'Authorization': 'Bearer $jwtToken',
-          },
-          body: jsonEncode(token));
-
-      if (response.statusCode == 200) {
-        // print(response.body);
-        print('===success===');
-        List<NFT> localNFTs = [];
-        if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
-        List<dynamic> data = await jsonDecode(response.body);
-        data.forEach((value) {
-          if (value != null) {
-            NFT nft = NFT(
-              merchandise: Merchandise.fromMap(value),
-              nftID: -1,
-              id: -1,
-              updatedAt: DateTime.parse('2000-01-01 00:00:01'),
-              userID: -1,
-              createdAt: DateTime.parse('2000-01-01 00:00:01'),
-            );
-            var preExistingNft = localNFTs.firstWhereOrNull(
-                (element) => element.merchandise.id == nft.merchandise.id);
-            if (preExistingNft == null) localNFTs.add(nft);
-          }
-        });
-        // for (var nft in data) {
-        //   if (nft != null) {
-        //     localNFTs.add(NFT(
-        //       merchandise: Merchandise.fromMap(nft),
-        //       nftID: -1,
-        //       id: -1,
-        //       updatedAt: DateTime.parse('2000-01-01 00:00:01'),
-        //       userID: -1,
-        //       createdAt: DateTime.parse('2000-01-01 00:00:01'),
-        //     ));
-        //   }
-        // }
-        userData.myNFTList = localNFTs;
-        await globalBox.put('userData', userData);
-        return response.body;
-        // return jsonDecode(response.body);
-      } else {
-        print(response.statusCode.toString());
-        throw Exception(response.body);
-      }
+    if (response.statusCode == 200) {
+      // print(response.body);
+      print('===SUCCESS fetchWalletNfts===');
+      List<NFT> localNFTs = [];
+      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      List<dynamic> data = await jsonDecode(response.body);
+      data.forEach((value) {
+        if (value != null) {
+          NFT nft = NFT.fromWallet(value);
+          var preExistingNft = localNFTs.firstWhereOrNull(
+              (element) => element.merchandise.id == nft.merchandise.id);
+          if (preExistingNft == null) localNFTs.add(nft);
+        }
+      });
+      userData.myNFTList = localNFTs;
+      await globalBox.put('userData', userData);
+      return response.body;
+      // return jsonDecode(response.body);
+    } else {
+      print(response.statusCode.toString());
+      throw Exception(response.body);
     }
   }
 
@@ -395,10 +377,7 @@ class API {
       switch (response.statusCode) {
         case 200:
           final UserData userData = globalBox.get('userData');
-          userData.walletAddress = data['user_instance'] != null
-              ? data['user_instance']['wallet_address'] ?? '-'
-              : data['wallet_address'] ?? '-';
-
+          userData.walletAddress = data['wallet_address'] ?? '-';
           await globalBox.put('userData', userData);
           print('===METAMASK CONNECT Updated UserData===');
           return const Success(true);
