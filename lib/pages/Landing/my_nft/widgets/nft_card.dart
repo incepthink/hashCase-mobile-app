@@ -23,9 +23,11 @@ class NFTCard extends StatelessWidget {
           backgroundColor: Colors.transparent,
           builder: (BuildContext context) {
             return ProductInfoBuilder(
+              onPop: Navigator.of(context).pop,
               title: nft.merchandise.name,
               imageUrl: nft.merchandise.imageURL,
-              description: nft.toString(),
+              description: nft.merchandise.description,
+              boldText: 'ID: ${nft.merchandise.id}',
             );
           },
         );
@@ -93,6 +95,7 @@ class NFTCard extends StatelessWidget {
                       Text(
                         nft.merchandise.name,
                         style: kTextStyleBody2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 7),
                       Row(
@@ -103,7 +106,7 @@ class NFTCard extends StatelessWidget {
                             style: kTextStyleSecondary,
                           ),
                           Text(
-                            'ETH 6.64',
+                            nft.merchandise.claimable ? "Claimable" : "Claimed",
                             style: kTextStyleSecondary.copyWith(
                                 fontWeight: FontWeight.w700),
                           )

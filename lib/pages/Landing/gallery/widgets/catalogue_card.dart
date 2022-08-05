@@ -79,9 +79,11 @@ class CatalogueCard extends StatelessWidget {
                             backgroundColor: Colors.transparent,
                             builder: (BuildContext context) {
                               return ProductInfoBuilder(
+                                onPop: Navigator.of(context).pop,
                                 title: hcNFT.name,
                                 imageUrl: hcNFT.image,
-                                description: hcNFT.toString(),
+                                description: hcNFT.description,
+                                boldText: 'ID: ${hcNFT.id}',
                               );
                             },
                           );

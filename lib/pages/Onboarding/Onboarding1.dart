@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:hash_case/pages/Onboarding/Onboarding2.dart';
@@ -14,7 +15,8 @@ class OnboardingPage1 extends StatefulWidget {
 }
 
 class _OnboardingPage1State extends State<OnboardingPage1> {
-  double _fromY = 90;
+  double _fromY = 140;
+  double initialHeight = 140;
   late Timer timer;
   final _animationDuration = const Duration(milliseconds: 3000);
   @override
@@ -40,7 +42,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
-        _fromY = [_fromY - 10, _fromY + 10][x];
+        _fromY = [initialHeight - 10, initialHeight + 10][x];
       });
       x = 1 - x;
     });
@@ -49,6 +51,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    initialHeight = min(140, size.height * 0.15);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -85,7 +88,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
                 colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0), BlendMode.srcOver),
                 child: Container(
-                  height: 486,
+                  height: min(486, size.height * 0.4),
                   width: 322,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -158,34 +161,27 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
                       style: kTextStyleBody,
                     ),
                     const SizedBox(height: 15),
-                    Hero(
-                      tag: 'first',
-                      child: Material(
-                        color: Colors.transparent,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 16),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: const BoxDecoration(
-                            color: kColorCta,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(4),
-                            ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: const BoxDecoration(
+                        color: kColorCta,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(4),
+                        ),
+                      ),
+                      // width: double.infinity,
+                      child: Center(
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).pushReplacement(
+                            animatedRoute(
+                                const OnboardingPage2(),
+                                RouteType.RIGHT_TO_LEFT,
+                                const Duration(milliseconds: 700)),
                           ),
-                          // width: double.infinity,
-                          child: Center(
-                            child: InkWell(
-                              onTap: () =>
-                                  Navigator.of(context).pushReplacement(
-                                animatedRoute(
-                                    const OnboardingPage2(),
-                                    RouteType.RIGHT_TO_LEFT,
-                                    const Duration(milliseconds: 700)),
-                              ),
-                              child: Text(
-                                'Explore Now',
-                                style: kTextStyleH1.copyWith(fontSize: 16),
-                              ),
-                            ),
+                          child: Text(
+                            'Explore Now',
+                            style: kTextStyleH1.copyWith(fontSize: 16),
                           ),
                         ),
                       ),

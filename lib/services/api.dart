@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hash_case/GlobalConstants.dart';
 import 'package:hash_case/GlobalWidgets/custom_snackbar.dart';
 import 'package:hash_case/HiveDB/NFT/Catalogue.dart';
-import 'package:hash_case/HiveDB/NFT/Merchandise.dart';
 import 'package:hash_case/services/endpoints.dart';
 import 'package:hash_case/services/models.dart';
 import 'package:hash_case/services/smartContractFunctions.dart';
@@ -243,7 +242,7 @@ class API {
 
   static signOut() async {
     final globalBox = Hive.box('globalBox');
-    globalBox.delete('userData');
+    await globalBox.delete('userData');
     await StorageService.JWTStorage.deleteAll();
   }
 
@@ -336,14 +335,17 @@ class API {
 
       switch (response.statusCode) {
         case 200:
+          // final addEmail = await API.addEmail(password);
+          // if (addEmail.isError()) {
+          //   return Error(Exception(addEmail.getError().toString()));
+          // }
+          // print('===updated UserData in BackEnd===');
           final UserData userData = globalBox.get('userData');
           userData.email = email;
-          final userID = data['user_instance'] != null
-              ? data['user_instance']['id'] ?? '-'
-              : data['id'] ?? '-';
+          final userID = data['user_instance']['id'] ?? '-';
           userData.id = userID;
           await globalBox.put('userData', userData);
-          print('===updated UserData===');
+          print('===updated UserData in Hive===');
           return const Success(true);
         case 500:
           String message;
@@ -376,6 +378,11 @@ class API {
       final data = json.decode(response.body);
       switch (response.statusCode) {
         case 200:
+          // final addWallet = await API.addWallet(walletAddress);
+          // if (addWallet.isError()) {
+          //   return Error(Exception(addWallet.getError().toString()));
+          // }
+          // print('===updated UserData in BackEnd===');
           final UserData userData = globalBox.get('userData');
           userData.walletAddress = data['wallet_address'] ?? '-';
           await globalBox.put('userData', userData);
@@ -396,6 +403,57 @@ class API {
           return Error(Exception(message));
         default:
           return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
+    }
+  }
+
+  static Future<Result<Exception, bool>> addEmail(String password) async {
+    try {
+      final uri = Uri.parse('${Endpoints.baseURL}/user/addEmail');
+      final globalBox = Hive.box('globalBox');
+      final UserData userData = globalBox.get('userData');
+      final response = await http.post(uri, body: {
+        'user_Id': userData.id,
+        'email': userData.email,
+        'password': password
+      });
+      final data = json.decode(response.body);
+      switch (response.statusCode) {
+        case 200:
+          return const Success(true);
+        case 500:
+          return Error(Exception(data["message"]));
+        default:
+          return Error(Exception(
+              "Something went wrong! ErrorCode:${response.statusCode}"));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
+    }
+  }
+
+  static Future<Result<Exception, bool>> addWallet(String walletAddress) async {
+    try {
+      final uri = Uri.parse('${Endpoints.baseURL}/user/addWallet');
+      final globalBox = Hive.box('globalBox');
+      final UserData userData = globalBox.get('userData');
+      final response = await http.post(uri, body: {
+        'user_Id': userData.id,
+        'wallet_address': walletAddress,
+      });
+      final data = json.decode(response.body);
+      switch (response.statusCode) {
+        case 200:
+          return const Success(true);
+        case 500:
+          return Error(Exception(data["message"]));
+        default:
+          return Error(Exception(
+              "Something went wrong! ErrorCode:${response.statusCode}"));
       }
     } catch (e) {
       debugPrint("Unhandled Exception");

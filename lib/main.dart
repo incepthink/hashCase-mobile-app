@@ -16,6 +16,8 @@ import 'HiveDB/UserData/UserData.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
+  // Hive.deleteFromDisk();
+  // Hive.deleteBoxFromDisk('globalBox');
   Hive.registerAdapter(UserDataAdapter());
   Hive.registerAdapter(NFTAdapter());
   Hive.registerAdapter(CatalogueAdapter());

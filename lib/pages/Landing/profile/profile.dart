@@ -679,13 +679,13 @@ class ProfilePage extends StatelessWidget {
                       }
                     }),
                 InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const OnboardingPage1(),
-                      ),
-                    );
-                    API.signOut;
+                  onTap: () async {
+                    await API.signOut();
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => const OnboardingPage1(),
+                    //   ),
+                    // );
                   },
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
