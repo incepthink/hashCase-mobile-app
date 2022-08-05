@@ -241,6 +241,26 @@ class API {
     }
   }
 
+  static Future createOrder() async {
+    final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
+    final order = {'user_id': '', 'address_id': '', 'product': '', 'sku': ''};
+    final response =
+        await http.post(Uri.parse('${Endpoints.baseURL}/orders/createOrder'),
+            headers: {
+              "Content-Type": "application/json",
+              'Authorization': 'Bearer $jwtToken',
+            },
+            body: jsonEncode(order));
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      return jsonDecode(response.body);
+    } else {
+      print(response.body);
+      throw Exception(response.body);
+    }
+  }
+
   static signOut() async {
     final globalBox = Hive.box('globalBox');
     globalBox.delete('userData');
@@ -364,6 +384,53 @@ class API {
     } catch (e) {
       debugPrint("Unhandled Exception");
       return Error(Exception(e.toString()));
+    }
+  }
+
+  static Future<Result<Exception, bool>> claimToWallet(var productId) async {
+    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
+    final globalBox = Hive.box('globalBox');
+    final UserData userData = globalBox.get('userData');
+    final userId = userData.id;
+    var body = {
+      'user_id': userId,
+      'nft_id': productId,
+      'wallet_address': address,
+      'toDelete': false
+    };
+    // if(){}
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/localnft/claimtowallet'),
+        body: jsonEncode(body));
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      return const Success(true);
+    } else {
+      print(response.body);
+      throw Exception(response.body);
+    }
+  }
+
+  static Future<Result<Exception, bool>> claimToEmail(var productId) async {
+    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
+    final globalBox = Hive.box('globalBox');
+    final UserData userData = globalBox.get('userData');
+    final userId = userData.id;
+    var body = {
+      'user_id': userId,
+      'nft_id': productId,
+    };
+    final response = await http.post(
+        Uri.parse('${Endpoints.baseURL}/localnft/claimwithemail'),
+        body: jsonEncode(body));
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      return const Success(true);
+    } else {
+      print(response.body);
+      throw Exception(response.body);
     }
   }
 
