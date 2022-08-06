@@ -172,6 +172,7 @@ class API {
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
     final address = userData.walletAddress;
+    print('wallet address --- $address');
     if (address == '-') {
       return;
     }
@@ -230,7 +231,7 @@ class API {
 
   static Future getServerSideProps() async {
     final response = await http.get(
-      Uri.parse('${Endpoints.baseURL}/collections/byId/1'),
+      Uri.parse('${Endpoints.baseURL}/collections/getallNames'),
     );
 
     if (response.statusCode == 200) {
