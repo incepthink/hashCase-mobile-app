@@ -126,22 +126,27 @@ class _NFTsBuilderState extends State<NFTsBuilder> {
             valueListenable: isLoading,
             builder: (context, value, child) {
               if (isLoading.value) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 50),
-                  child: SizedBox(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 3,
+                return Column(
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: SizedBox(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                        height: 30,
+                        width: 30,
+                      ),
                     ),
-                    height: 30,
-                    width: 30,
-                  ),
+                  ],
                 );
               }
               return const Padding(
                 padding: EdgeInsets.only(top: 50),
                 child: Text(
                   'No NFTs to display',
+                  textAlign: TextAlign.center,
                   style: kTextStyleBody,
                 ),
               );

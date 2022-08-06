@@ -29,6 +29,12 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
   void startTimer() {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
@@ -45,7 +51,6 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     initialHeight = min(120, size.height * 0.15);
-    print(initialHeight);
     return Scaffold(
       backgroundColor: const Color(0xff001217),
       body: WillPopScope(
