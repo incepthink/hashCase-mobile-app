@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:hash_case/pages/login/login.dart';
 
 import '../../GlobalConstants.dart';
@@ -50,31 +49,19 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
     final size = MediaQuery.of(context).size;
     initialHeight = min(140, size.height * 0.15);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xff001217),
       body: SafeArea(
         top: false,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0), BlendMode.srcOver),
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("assets/images/background.png"),
-                    fit: BoxFit.cover,
-                  ),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xff082730), Color(0xff03161B)],
                 ),
-              ),
-            ),
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.2), BlendMode.srcOver),
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black.withOpacity(0.2),
               ),
             ),
             AnimatedPositioned(
@@ -85,7 +72,6 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
                 colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0), BlendMode.srcOver),
                 child: Container(
-                  // height: 186,
                   height: min(386, size.height * 0.25),
                   width: size.width,
                   decoration: const BoxDecoration(
@@ -141,6 +127,8 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
                       ),
                     ),
                     ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                      physics: const BouncingScrollPhysics(),
                       shrinkWrap: true,
                       itemBuilder: (context, index) => DescriptionCard(
                         description: Description.descriptions[index],

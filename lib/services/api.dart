@@ -114,23 +114,39 @@ class API {
     }
   }
 
-  static Future signUp(String email, String password) async {
-    final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/user/signup'),
-        body: {'email': email, 'password': password});
+  static Future<Result<Exception, bool>> signUp(
+      String email, String password) async {
+    try {
+      final globalBox = Hive.box('globalBox');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/signup');
+      final response =
+          await http.post(uri, body: {'email': email, 'password': password});
+      final data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      // print('successs');
-      // print(response.body);
-      final res = jsonDecode(response.body);
-      // print(res['token']);
-      await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
-      await StorageService.userStorage
-          .write(key: 'user', value: res['user_instance']['id'].toString());
-      return response.body;
-    } else {
-      print(response.body);
-      throw Exception(response.body);
+      switch (response.statusCode) {
+        case 200:
+          if (globalBox.containsKey('userData')) globalBox.delete('userData');
+          final UserData userData = UserData.fromEmail(data);
+          await globalBox.put('userData', userData);
+          await StorageService.JWTStorage.write(
+              key: 'JWT', value: data['token']);
+          return const Success(true);
+        case 500:
+          String message;
+          switch (data["message"]) {
+            case "User already exist":
+              message = "User with the given credentials already exists!";
+              break;
+            default:
+              message = data["message"];
+          }
+          return Error(Exception(message));
+        default:
+          return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception, ${e.toString()}");
+      return Error(Exception("Something went wrong, please try again"));
     }
   }
 

@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../../GlobalConstants.dart';
 import '../../GlobalWidgets/animated_routing.dart';
@@ -41,7 +40,6 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
         _fromY = [initialHeight - 10, initialHeight + 10][x];
-        print('fromY = $_fromY');
       });
       x = 1 - x;
     });
@@ -57,33 +55,20 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     initialHeight = min(140, size.height * 0.1);
-    print('initial height = $initialHeight');
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Color(0xff001217),
       body: SafeArea(
         top: false,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0), BlendMode.srcOver),
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("assets/images/background.png"),
-                    fit: BoxFit.cover,
-                  ),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xff082730), Color(0xff03161B)],
                 ),
-              ),
-            ),
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.2), BlendMode.srcOver),
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black.withOpacity(0.2),
               ),
             ),
             AnimatedPositioned(
@@ -123,8 +108,8 @@ class _OnboardingPage2State extends State<OnboardingPage2> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      bodyText.split('').reversed.join(),
+                    const Text(
+                      bodyText,
                       style: kTextStyleBody,
                     ),
                     const SizedBox(height: 15),
