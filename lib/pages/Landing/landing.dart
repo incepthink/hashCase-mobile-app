@@ -109,7 +109,7 @@ class _LandingPageState extends State<LandingPage> {
               physics: const BouncingScrollPhysics(),
               children: [
                 const GalleryPage(),
-                const MyNFTs(),
+                MyNFTs(pageController: pageController),
                 ProfilePage(),
               ],
             ),

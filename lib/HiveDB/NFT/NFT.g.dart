@@ -23,6 +23,7 @@ class NFTAdapter extends TypeAdapter<NFT> {
       createdAt: fields[4] as DateTime,
       updatedAt: fields[5] as DateTime,
       merchandise: fields[6] as Merchandise,
+      fromWallet: fields[7] as bool,
       number: fields[3] as int?,
     );
   }
@@ -30,7 +31,7 @@ class NFTAdapter extends TypeAdapter<NFT> {
   @override
   void write(BinaryWriter writer, NFT obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class NFTAdapter extends TypeAdapter<NFT> {
       ..writeByte(5)
       ..write(obj.updatedAt)
       ..writeByte(6)
-      ..write(obj.merchandise);
+      ..write(obj.merchandise)
+      ..writeByte(7)
+      ..write(obj.fromWallet);
   }
 
   @override

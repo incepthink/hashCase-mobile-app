@@ -32,7 +32,6 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
         _fromY = [initialHeight - 10, initialHeight + 10][x];
-        print('fromY = $_fromY');
       });
       x = 1 - x;
     });

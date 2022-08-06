@@ -163,7 +163,7 @@ class API {
     if (response.statusCode == 200) {
       print('===SUCCESS fetchEmailNfts===');
       List<NFT> localNFTs = [];
-      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      if (userData.localNFTs.isNotEmpty) localNFTs = userData.localNFTs;
       List<dynamic> data = jsonDecode(response.body);
       data.forEach((value) {
         NFT nft = NFT.fromEmail(value);
@@ -171,7 +171,7 @@ class API {
             localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
         if (preExistingNft == null) localNFTs.add(nft);
       });
-      userData.myNFTList = localNFTs;
+      userData.localNFTs = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
     } else {
@@ -184,11 +184,9 @@ class API {
   static Future fetchWalletNFTs() async {
     // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-    print('jwtToken = $jwtToken');
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
     final address = userData.walletAddress;
-    print('wallet address --- $address');
     if (address == '-') {
       return;
     }
@@ -206,7 +204,7 @@ class API {
       // print(response.body);
       print('===SUCCESS fetchWalletNfts===');
       List<NFT> localNFTs = [];
-      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      if (userData.onChainNFTs.isNotEmpty) localNFTs = userData.onChainNFTs;
       List<dynamic> data = await jsonDecode(response.body);
       data.forEach((value) {
         if (value != null) {
@@ -216,7 +214,7 @@ class API {
           if (preExistingNft == null) localNFTs.add(nft);
         }
       });
-      userData.myNFTList = localNFTs;
+      userData.onChainNFTs = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
       // return jsonDecode(response.body);
@@ -251,7 +249,7 @@ class API {
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
+      // print(response.body);
       return jsonDecode(response.body);
     } else {
       print(response.body);

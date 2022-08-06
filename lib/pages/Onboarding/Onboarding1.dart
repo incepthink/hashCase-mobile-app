@@ -53,7 +53,7 @@ class _OnboardingPage1State extends State<OnboardingPage1> {
     final size = MediaQuery.of(context).size;
     initialHeight = min(140, size.height * 0.15);
     return Scaffold(
-      backgroundColor: Color(0xff001217),
+      backgroundColor: const Color(0xff001217),
       body: SafeArea(
         top: false,
         child: Stack(
