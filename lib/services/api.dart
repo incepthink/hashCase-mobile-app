@@ -168,6 +168,7 @@ class API {
   static Future fetchWalletNFTs() async {
     // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
+    print('jwtToken = $jwtToken');
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
     final address = userData.walletAddress;
@@ -175,6 +176,7 @@ class API {
       return;
     }
     final token = await SmartContractFunction.smartContracts();
+    // print(jsonDecode(token));
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/merchandise/getallbyIDs'),
         headers: {
@@ -285,7 +287,7 @@ class API {
     }
   }
 
-  static Future<bool> ethereumSign(EthereumMetadata ethMeta,
+  static Future ethereumSign(EthereumMetadata ethMeta,
       {bool connect = false}) async {
     try {
       if (!ethMeta.connector.connected) {
@@ -306,14 +308,13 @@ class API {
       );
       //Getting the verified message
 
+      if (connect) {
+        return await API.addWallet(ethMeta.address);
+      }
       final verifiedMessage =
           await API.getVerifiedToken(ethMeta.address, signedBytes);
       if (verifiedMessage == "Token verified") {
         await ethMeta.connector.killSession();
-        if (connect) {
-          await API.connectMetamask(ethMeta.address);
-          return true;
-        }
         return await API.metamaskLogin(ethMeta.address);
       }
       return Future.value(true);
@@ -328,30 +329,28 @@ class API {
       String email, String password) async {
     try {
       final globalBox = Hive.box('globalBox');
-      final uri = Uri.parse('${Endpoints.baseURL}/user/login');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/signup');
       final response =
           await http.post(uri, body: {'email': email, 'password': password});
       final data = json.decode(response.body);
-
+      print('signed up user for connecting');
       switch (response.statusCode) {
         case 200:
-          // final addEmail = await API.addEmail(password);
-          // if (addEmail.isError()) {
-          //   return Error(Exception(addEmail.getError().toString()));
-          // }
-          // print('===updated UserData in BackEnd===');
+          final addEmail = await API.addEmail(email, password);
+          if (addEmail.isError()) {
+            return Error(Exception(addEmail.getError().toString()));
+          }
+          print('===updated UserData in BackEnd===');
           final UserData userData = globalBox.get('userData');
           userData.email = email;
-          final userID = data['user_instance']['id'] ?? '-';
-          userData.id = userID;
           await globalBox.put('userData', userData);
           print('===updated UserData in Hive===');
           return const Success(true);
         case 500:
           String message;
           switch (data["message"]) {
-            case "User does not exist":
-              message = "User with given credentials does not exist!";
+            case "User already exist":
+              message = "User with given credentials already exists!";
               break;
             case "Wrong Password":
               message = "Wrong Password";
@@ -410,19 +409,23 @@ class API {
     }
   }
 
-  static Future<Result<Exception, bool>> addEmail(String password) async {
+  static Future<Result<Exception, bool>> addEmail(
+      String email, String password) async {
     try {
-      final uri = Uri.parse('${Endpoints.baseURL}/user/addEmail');
       final globalBox = Hive.box('globalBox');
       final UserData userData = globalBox.get('userData');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/addEmail');
       final response = await http.post(uri, body: {
-        'user_Id': userData.id,
-        'email': userData.email,
+        'user_Id': userData.id.toString(),
+        'email': email,
         'password': password
       });
       final data = json.decode(response.body);
       switch (response.statusCode) {
         case 200:
+          userData.email = email;
+          await globalBox.put('userData', userData);
+          print('===updated UserData in Hive===');
           return const Success(true);
         case 500:
           return Error(Exception(data["message"]));
@@ -438,25 +441,34 @@ class API {
 
   static Future<Result<Exception, bool>> addWallet(String walletAddress) async {
     try {
-      final uri = Uri.parse('${Endpoints.baseURL}/user/addWallet');
+      print('tried adding wallet');
       final globalBox = Hive.box('globalBox');
       final UserData userData = globalBox.get('userData');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/addWallet');
       final response = await http.post(uri, body: {
-        'user_Id': userData.id,
+        'user_Id': userData.id.toString(),
         'wallet_address': walletAddress,
       });
       final data = json.decode(response.body);
       switch (response.statusCode) {
         case 200:
+          print('this passed');
+          userData.walletAddress = walletAddress;
+          await globalBox.put('userData', userData);
           return const Success(true);
         case 500:
+          print('this failed');
+          print(data["message"]);
           return Error(Exception(data["message"]));
         default:
-          return Error(Exception(
-              "Something went wrong! ErrorCode:${response.statusCode}"));
+          print('this failed horribly');
+          return Error(Exception(data["message"]));
+        // return Error(Exception(
+        //     "Something went wrong! ErrorCode:${response.statusCode}"));
       }
     } catch (e) {
       debugPrint("Unhandled Exception");
+      print(e.toString());
       return Error(Exception(e.toString()));
     }
   }

@@ -1,5 +1,8 @@
 import 'package:flutter/services.dart';
+import 'package:hash_case/HiveDB/UserData/UserData.dart';
 import 'package:hash_case/services/api.dart';
+import 'package:hash_case/services/storageService.dart';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -18,15 +21,15 @@ class SmartContractFunction {
     final tokensOfOwner = contract.function('tokensOfOwner');
     var httpClient = Client();
     var ethClient = Web3Client('https://polygon-rpc.com', httpClient);
-    var credentials = EthPrivateKey.fromHex(
-        "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
+    // var credentials = EthPrivateKey.fromHex(
+    //     "a3d250b1bc16bf44243310d3ecc59c8d6f77e05db5fc988eb000bb3d6b94ea81");
     // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
-    var address = await credentials.extractAddress();
+    final UserData userData = Hive.box('globalBox').get('userData');
+    final address = userData.walletAddress;
+    // var address = await credentials.extractAddress();
     var tokens = await ethClient
         .call(contract: contract, function: tokensOfOwner, params: [
-      // EthereumAddress.fromHex(
-      address
-      // )
+      EthereumAddress.fromHex(address!)
       // address
     ]);
     var contractId = (await API.getServerSideProps())['id'];

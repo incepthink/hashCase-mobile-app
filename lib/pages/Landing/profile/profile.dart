@@ -34,15 +34,19 @@ class ProfilePage extends StatelessWidget {
     if (password.isEmpty) {
       showCustomSnackBar(
         text: "Please Enter a valid password",
+        color: kColorDanger,
       );
       return false;
     }
     if (confirmPassword != password) {
-      showCustomSnackBar(text: "Passwords don't match");
+      showCustomSnackBar(
+        text: "Passwords don't match",
+        color: kColorDanger,
+      );
       return false;
     }
     isLoading.value = true;
-    final Result result = await API.connectEmail(email, password);
+    final Result result = await API.addEmail(email, password);
     result.when(
       (error) => showCustomSnackBar(
         text: error.toString().substring(10),
@@ -112,7 +116,8 @@ class ProfilePage extends StatelessWidget {
                     valueListenable:
                         Hive.box('globalBox').listenable(keys: ['userData']),
                     builder: (context, Box<dynamic> box, child) {
-                      final UserData userData = box.get('userData');
+                      final UserData? userData = box.get('userData');
+                      if (userData == null) return SizedBox();
                       if (userData.email != '-') {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 20),
@@ -148,7 +153,8 @@ class ProfilePage extends StatelessWidget {
                   valueListenable:
                       Hive.box('globalBox').listenable(keys: ['userData']),
                   builder: (context, Box box, child) {
-                    UserData userData = box.get('userData');
+                    UserData? userData = box.get('userData');
+                    if (userData == null) return SizedBox();
                     if (userData.walletAddress != '-') {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 20),
@@ -188,22 +194,34 @@ class ProfilePage extends StatelessWidget {
                   valueListenable:
                       Hive.box('globalBox').listenable(keys: ['userData']),
                   builder: (context, Box box, child) {
-                    UserData userData = box.get('userData');
+                    UserData? userData = box.get('userData');
+                    if (userData == null) {
+                      return SizedBox();
+                    }
                     if (userData.walletAddress == '-') {
                       return InkWell(
                         onTap: () async {
                           final ethMeta = await API.ethereumConnect();
-                          API
-                              .ethereumSign(ethMeta, connect: true)
-                              .then((value) {
-                            if (value) {
-                              showCustomSnackBar(text: 'Wallet Connected');
-                            } else {
-                              showCustomSnackBar(
-                                  text: 'Connection Failed',
-                                  color: kColorDanger);
-                            }
-                          });
+                          final result =
+                              await API.ethereumSign(ethMeta, connect: true);
+                          if (result.runtimeType == Result) {
+                            result.when(
+                                (error) => showCustomSnackBar(
+                                    text: error.toString(),
+                                    color: kColorDanger),
+                                (success) => showCustomSnackBar(
+                                    text: 'Wallet Connected'));
+                          }
+
+                          //     .then((value) {
+                          //   if (value) {
+                          //     showCustomSnackBar(text: 'Wallet Connected');
+                          //   } else {
+                          //     showCustomSnackBar(
+                          //         text: 'Connection Failed',
+                          //         color: kColorDanger);
+                          //   }
+                          // });
                         },
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 10),
@@ -233,7 +251,10 @@ class ProfilePage extends StatelessWidget {
                     valueListenable:
                         Hive.box('globalBox').listenable(keys: ['userData']),
                     builder: (context, Box box, child) {
-                      UserData userData = box.get('userData');
+                      UserData? userData = box.get('userData');
+                      if (userData == null) {
+                        return SizedBox();
+                      }
                       if (userData.email == '-') {
                         return InkWell(
                           onTap: () {
@@ -680,12 +701,14 @@ class ProfilePage extends StatelessWidget {
                     }),
                 InkWell(
                   onTap: () async {
-                    await API.signOut();
-                    // Navigator.of(context).push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const OnboardingPage1(),
-                    //   ),
-                    // );
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const OnboardingPage1(),
+                      ),
+                    );
+                    Future.delayed(const Duration(seconds: 1),
+                        () async => await API.signOut());
+                    // await API.signOut();
                   },
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
