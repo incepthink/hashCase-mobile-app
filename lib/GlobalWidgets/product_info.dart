@@ -12,9 +12,13 @@ class ProductInfoBuilder extends StatelessWidget {
     this.imageUrl,
     required this.title,
     required this.description,
+    required this.onPop,
+    this.boldText = '',
   }) : super(key: key);
   final String description;
   final String? imageUrl;
+  final VoidCallback onPop;
+  final String boldText;
   final String title;
   @override
   Widget build(BuildContext context) {
@@ -34,19 +38,27 @@ class ProductInfoBuilder extends StatelessWidget {
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                height: 6,
-                margin: const EdgeInsets.only(bottom: 20),
-                width: size.width * 0.25,
-                decoration: const BoxDecoration(
-                    color: Colors.white54,
-                    borderRadius: BorderRadius.all(Radius.circular(12))),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 6,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    width: size.width * 0.25,
+                    decoration: const BoxDecoration(
+                        color: Colors.white54,
+                        borderRadius: BorderRadius.all(Radius.circular(12))),
+                  ),
+                ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SvgPicture.asset('assets/icons/arrow.svg'),
+                  InkWell(
+                      onTap: onPop,
+                      child: SvgPicture.asset('assets/icons/arrow.svg')),
                   Text(
                     title,
                     style: kTextStyleH1,
@@ -91,18 +103,21 @@ class ProductInfoBuilder extends StatelessWidget {
                       )
                     ],
                   ),
-                  const Text(
-                    '0.05 ETH',
+                  Text(
+                    boldText,
                     style: kTextStyleH1,
                   )
                 ],
               ),
               const SizedBox(
-                height: 20,
+                height: 10,
               ),
-              Text(
-                description,
-                style: kTextStyleSecondary,
+              Container(
+                child: Text(
+                  description,
+                  textAlign: TextAlign.justify,
+                  style: kTextStyleSecondary,
+                ),
               ),
               Container(
                 margin: const EdgeInsets.only(top: 20),

@@ -19,14 +19,12 @@ class OnboardingPage3 extends StatefulWidget {
 
 class _OnboardingPage3State extends State<OnboardingPage3> {
   late Timer timer;
-  late double _fromY;
-  int x = 0;
+  double _fromY = 140;
+  double initialHeight = 140;
   final _animationDuration = const Duration(milliseconds: 3000);
   @override
   void initState() {
     super.initState();
-    final screenHeight = window.physicalSize.height / window.devicePixelRatio;
-    _fromY = min(60, screenHeight * 0.15);
     startTimer();
   }
 
@@ -34,7 +32,8 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
     int x = 0;
     timer = Timer.periodic(_animationDuration, (tick) {
       setState(() {
-        _fromY = [_fromY - 10, _fromY + 10][x];
+        _fromY = [initialHeight - 10, initialHeight + 10][x];
+        print('fromY = $_fromY');
       });
       x = 1 - x;
     });
@@ -49,6 +48,7 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    initialHeight = min(140, size.height * 0.15);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -101,7 +101,7 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
               width: size.width * 0.95,
               bottom: 10,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(25, 30, 25, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -110,182 +110,97 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
                         Radius.circular(14),
                       ),
                       child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 25),
-                            decoration: const BoxDecoration(
-                              color: Color(0x3300C2FF),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(14),
-                              ),
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 20),
+                          decoration: const BoxDecoration(
+                            color: Color(0x3300C2FF),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(13),
                             ),
-                            child: Row(
-                              children: [
-                                ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(minWidth: 80),
-                                  child: Image.asset(
-                                    'assets/images/cart.png',
-                                    height: 60,
-                                  ),
+                          ),
+                          child: Row(
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(minWidth: 70),
+                                child: Image.asset(
+                                  'assets/images/cart.png',
+                                  height: 48,
                                 ),
-                                const Expanded(
-                                  child: Text(
-                                    'Make customized nfts for your amazing products',
-                                    style: kTextStyleH2,
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Row(
-                        children: [
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 80),
-                            child: Image.asset(
-                              'assets/images/database.png',
-                              height: 40,
-                            ),
+                              ),
+                              const Expanded(
+                                child: Text(
+                                  'Make customized nfts for your amazing products',
+                                  style: kTextStyleH2,
+                                ),
+                              )
+                            ],
                           ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'Send it to your  community for them to claim their NFT!',
-                              style: kTextStyleH2,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Row(
-                        children: [
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 80),
-                            child: Image.asset(
-                              'assets/images/email.png',
-                              height: 40,
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'Users claim their NFTs hassle free with email or wallet',
-                              style: kTextStyleH2,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(15),
-                      child: Row(
-                        children: [
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 80),
-                            child: Image.asset(
-                              'assets/images/confetti.png',
-                              height: 40,
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'Users get amazing utilities that come with the NFT!',
-                              style: kTextStyleH2,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          'How does it work',
-                          style: kTextStyleH1,
                         ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      ktextOnboarding3,
-                      style: kTextStyleBody,
+                    ListView.separated(
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) => DescriptionCard(
+                        description: Description.descriptions[index],
+                      ),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
+                      itemCount: 3,
                     ),
-                    const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Hero(
-                          tag: 'second',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 16),
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 15, 50, 15),
-                              decoration: const BoxDecoration(
-                                color: Color(0x3300C2FF),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 35, vertical: 10),
+                          decoration: const BoxDecoration(
+                            color: Color(0x3300C2FF),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                          // width: double.infinity,
+                          child: Center(
+                            child: InkWell(
+                              onTap: () =>
+                                  Navigator.of(context).pushReplacement(
+                                animatedRoute(
+                                    const OnboardingPage2(),
+                                    RouteType.LEFT_TO_RIGHT,
+                                    const Duration(milliseconds: 700)),
                               ),
-                              // width: double.infinity,
-                              child: Center(
-                                child: InkWell(
-                                  onTap: () =>
-                                      Navigator.of(context).pushReplacement(
-                                    animatedRoute(
-                                        const OnboardingPage2(),
-                                        RouteType.LEFT_TO_RIGHT,
-                                        const Duration(milliseconds: 700)),
-                                  ),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/arrow_left_round.svg',
-                                  ),
-                                ),
+                              child: const Text(
+                                'Back',
+                                style: kTextStyleH2,
                               ),
                             ),
                           ),
                         ),
-                        Hero(
-                          tag: 'third',
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 16),
-                              padding:
-                                  const EdgeInsets.fromLTRB(50, 15, 20, 15),
-                              decoration: const BoxDecoration(
-                                color: kColorCta,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 35, vertical: 10),
+                          decoration: const BoxDecoration(
+                            color: kColorCta,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                          // width: double.infinity,
+                          child: Center(
+                            child: InkWell(
+                              onTap: () =>
+                                  Navigator.of(context).pushReplacement(
+                                animatedRoute(
+                                    const LoginPage(),
+                                    RouteType.RIGHT_TO_LEFT,
+                                    const Duration(milliseconds: 700)),
                               ),
-                              // width: double.infinity,
-                              child: Center(
-                                child: InkWell(
-                                  onTap: () =>
-                                      Navigator.of(context).pushReplacement(
-                                    animatedRoute(
-                                        const LoginPage(),
-                                        RouteType.RIGHT_TO_LEFT,
-                                        const Duration(milliseconds: 700)),
-                                  ),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/arrow_right_round.svg',
-                                  ),
-                                ),
+                              child: const Text(
+                                'Next',
+                                style: kTextStyleH2,
                               ),
                             ),
                           ),
@@ -301,4 +216,63 @@ class _OnboardingPage3State extends State<OnboardingPage3> {
       ),
     );
   }
+}
+
+class DescriptionCard extends StatelessWidget {
+  const DescriptionCard({
+    required this.description,
+    Key? key,
+  }) : super(key: key);
+  final Description description;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 60),
+            child: Image.asset(
+              description.imagePath,
+              height: 36,
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          Expanded(
+            child: Text(
+              description.text,
+              style: kTextStyleBody.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class Description {
+  String text;
+  String imagePath;
+  Description({
+    required this.text,
+    required this.imagePath,
+  });
+  static List<Description> descriptions = [
+    Description(
+      text: "Send it to your  community for them to claim their NFT!",
+      imagePath: 'assets/images/database.png',
+    ),
+    Description(
+      text: "Users claim their NFTs hassle free with email or wallet",
+      imagePath: 'assets/images/email.png',
+    ),
+    Description(
+      text: "Users get amazing utilities that come with the NFT!",
+      imagePath: 'assets/images/confetti.png',
+    )
+  ];
 }

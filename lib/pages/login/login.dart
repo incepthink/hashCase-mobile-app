@@ -132,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 20, horizontal: 20),
                             width: double.infinity,
-                            height: MediaQuery.of(context).size.height * 0.55,
+                            // height: MediaQuery.of(context).size.height * 0.55,
                             decoration: const BoxDecoration(
                               color: Color(0x3300C2FF),
                               borderRadius: BorderRadius.only(

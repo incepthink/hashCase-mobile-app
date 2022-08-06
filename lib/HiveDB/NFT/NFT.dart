@@ -57,6 +57,7 @@ class NFT extends HiveObject {
       updatedAt: DateTime.parse('2000-01-01 00:00:01'),
       userID: -1,
       createdAt: DateTime.parse('2000-01-01 00:00:01'),
+      number: -1,
     );
   }
 
