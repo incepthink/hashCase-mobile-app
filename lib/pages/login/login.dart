@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hash_case/GlobalConstants.dart';
-import 'package:hash_case/pages/Landing/landing.dart';
-import 'package:hash_case/services/api.dart';
+import 'package:hash_case/pages/login/widgets/sign_in_builder.dart';
+import 'package:hash_case/pages/login/widgets/sign_up_builder.dart';
 import '../../GlobalWidgets/animated_routing.dart';
-import '../../GlobalWidgets/custom_snackbar.dart';
 import '../Onboarding/onboarding3.dart';
+import 'dart:math';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -19,16 +18,21 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late Timer timer;
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  late double initialHeight;
   final _animationDuration = const Duration(milliseconds: 3000);
-  final isLoadingEmail = ValueNotifier<bool>(false);
-  final isLoadingMetamask = ValueNotifier<bool>(false);
+
   double _fromY = 155;
+
   @override
   void initState() {
     startTimer();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
   }
 
   void startTimer() {
@@ -36,58 +40,19 @@ class _LoginPageState extends State<LoginPage> {
     timer = Timer.periodic(_animationDuration, (tick) {
       if (mounted) {
         setState(() {
-          _fromY = [140.0, 160.0][x];
+          _fromY = [initialHeight - 10, initialHeight + 10][x];
         });
       }
       x = 1 - x;
     });
   }
 
-  var showPassword = false;
-  _togglePasswordView() {
-    setState(() {
-      showPassword = !showPassword;
-    });
-  }
-
-  _handleSingIn() async {
-    isEmail(value) => RegExp(
-            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-        .hasMatch(value);
-    final String email = _emailController.text;
-    final String password = _passwordController.text.trim();
-    if (email.isEmpty || !isEmail(email)) {
-      showCustomSnackBar(
-        text: "Please enter a valid email",
-        color: kColorDanger,
-      );
-      return;
-    }
-    if (password.length < 2) {
-      showCustomSnackBar(
-        text: "Please enter a password",
-        color: kColorDanger,
-      );
-      return;
-    }
-    isLoadingEmail.value = true;
-    final result = await API.signIn(email, password);
-    result.when(
-      (exception) => showCustomSnackBar(
-        text: exception.toString().substring(10),
-        color: kColorDanger,
-      ),
-      (value) => Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const LandingPage()),
-      ),
-    );
-    isLoadingEmail.value = false;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    initialHeight = min(120, size.height * 0.15);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xff001217),
       body: WillPopScope(
         onWillPop: () {
           Navigator.of(context).pushReplacement(animatedRoute(
@@ -96,374 +61,108 @@ class _LoginPageState extends State<LoginPage> {
               const Duration(milliseconds: 700)));
           return Future.value(true);
         },
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                BackgroundWrapper(),
-                AvatarBuilder(
-                    fromY: _fromY, animationDuration: _animationDuration),
-                ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(0.2), BlendMode.srcOver),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: Colors.black.withOpacity(0.2),
-                  ),
-                ),
-                SafeArea(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Header(),
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const BackgroundWrapper(),
+              AvatarBuilder(
+                  fromY: _fromY, animationDuration: _animationDuration),
+              SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Header(),
+                    Column(
+                      children: [
+                        InkWell(
+                          onTap: () => showSignInBottomSheet(context),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 20),
-                            width: double.infinity,
-                            // height: MediaQuery.of(context).size.height * 0.55,
-                            decoration: const BoxDecoration(
-                              color: Color(0x3300C2FF),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 50),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                gradient: kGradientG1),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
                                 Text(
-                                  'SIGN IN',
-                                  style: kTextStyleArcadeClassic.copyWith(
-                                      color: Colors.white, fontSize: 32),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 20),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/icons/email.svg',
-                                            height: 14,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Email',
-                                            style: kTextStyleBody2,
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1.5,
-                                              color: Colors.white54),
-                                        ),
-                                        child: TextFormField(
-                                          controller: _emailController,
-                                          style: kTextStyleBody,
-                                          decoration: InputDecoration(
-                                              errorStyle: const TextStyle(
-                                                fontSize: 16.0,
-                                              ),
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(15.0),
-                                                borderSide: BorderSide.none,
-                                              ),
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 17)),
-                                          cursorColor: Colors.white70,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 20),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SvgPicture.asset(
-                                            'assets/icons/lock.svg',
-                                            height: 16,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Text(
-                                            'Password',
-                                            style: kTextStyleBody2,
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1.5,
-                                              color: Colors.white54),
-                                        ),
-                                        child: TextField(
-                                          onSubmitted: (_) => _handleSingIn(),
-                                          controller: _passwordController,
-                                          obscureText: !showPassword,
-                                          obscuringCharacter: '.',
-                                          style: kTextStyleBody.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 1.5),
-                                          decoration: InputDecoration(
-                                            isDense: true,
-                                            suffixIcon: InkWell(
-                                              splashColor: Colors.white,
-                                              onTap: () =>
-                                                  _togglePasswordView(),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    right: 8.0),
-                                                child: SvgPicture.asset(
-                                                  showPassword
-                                                      ? 'assets/icons/eye-closed.svg'
-                                                      : 'assets/icons/eye-open.svg',
-                                                  color: Colors.white,
-                                                  // height: 7,
-                                                ),
-                                              ),
-                                            ),
-                                            suffixIconConstraints:
-                                                const BoxConstraints(),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15.0),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                          ),
-                                          cursorColor: Colors.white70,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      const SizedBox(height: 6),
-                                      InkWell(
-                                        onTap: () {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              backgroundColor: kColorCta,
-                                              content: Text('In the works'),
-                                            ),
-                                          );
-                                        },
-                                        child: Text(
-                                          'Forgot your password ?',
-                                          style: kTextStyleBody2.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: kColorCta,
-                                          ),
-                                        ),
-                                      ),
-                                      InkWell(
-                                        onTap: _handleSingIn,
-                                        child: Hero(
-                                          tag: 'third',
-                                          child: Container(
-                                            margin: const EdgeInsets.symmetric(
-                                                vertical: 16),
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 16),
-                                            decoration: const BoxDecoration(
-                                              color: kColorCta,
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(4),
-                                              ),
-                                            ),
-                                            width: double.infinity,
-                                            child: ValueListenableBuilder(
-                                              valueListenable: isLoadingEmail,
-                                              builder: (context, box, value) {
-                                                return Material(
-                                                  color: Colors.transparent,
-                                                  child: Center(
-                                                    child: isLoadingEmail.value
-                                                        ? const SizedBox(
-                                                            height: 25,
-                                                            width: 25,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                              color:
-                                                                  Colors.white,
-                                                              strokeWidth: 3,
-                                                            ),
-                                                          )
-                                                        : Text(
-                                                            'Sign In',
-                                                            style: kTextStyleH1
-                                                                .copyWith(
-                                                                    fontSize:
-                                                                        16),
-                                                          ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      InkWell(
-                                        onTap: () async {
-                                          isLoadingMetamask.value = true;
-                                          final ethMeta =
-                                              await API.ethereumConnect();
-                                          API
-                                              .ethereumSign(
-                                            ethMeta,
-                                          )
-                                              .then(
-                                            (value) {
-                                              if (value) {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const LandingPage(),
-                                                  ),
-                                                );
-                                              } else {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    backgroundColor: kColorCta,
-                                                    content: Text(
-                                                        'Failed to Sign-In with Metamask'),
-                                                  ),
-                                                );
-                                              }
-                                              isLoadingMetamask.value = false;
-                                            },
-                                          );
-                                        },
-                                        child: ValueListenableBuilder(
-                                            valueListenable: isLoadingMetamask,
-                                            builder:
-                                                (context, bool value, child) {
-                                              return Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 12),
-                                                decoration: BoxDecoration(
-                                                  color: kColorCta
-                                                      .withOpacity(0.2),
-                                                  borderRadius:
-                                                      const BorderRadius.all(
-                                                    Radius.circular(4),
-                                                  ),
-                                                ),
-                                                width: double.infinity,
-                                                child: value
-                                                    ? Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: const [
-                                                          SizedBox(
-                                                            height: 25,
-                                                            width: 25,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                              color:
-                                                                  Colors.white,
-                                                              strokeWidth: 3,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      )
-                                                    : Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          SvgPicture.asset(
-                                                              'assets/icons/metamask-icon.svg'),
-                                                          const SizedBox(
-                                                              width: 15),
-                                                          Text(
-                                                            'Continue with Metamask',
-                                                            style: kTextStyleH1
-                                                                .copyWith(
-                                                                    fontSize:
-                                                                        16),
-                                                          ),
-                                                        ],
-                                                      ),
-                                              );
-                                            }),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          RichText(
-                                            text: TextSpan(
-                                              text: 'Don’t have an account?  ',
-                                              style: kTextStyleBody2,
-                                              children: [
-                                                TextSpan(
-                                                  text: 'Sign up',
-                                                  style:
-                                                      kTextStyleBody2.copyWith(
-                                                    fontSize: 14,
-                                                    color: kColorCta,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                  'Sign In',
+                                  style: kTextStyleH2,
                                 )
                               ],
                             ),
                           ),
                         ),
-                      )
-                    ],
-                  ),
+                        InkWell(
+                          onTap: () => showSingUpBottomSheet(context),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 50),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              color: const Color(0x3300C2FF),
+                              borderRadius: BorderRadius.circular(4),
+                              // gradient: kGradientG1,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  'Sign Up',
+                                  style: kTextStyleH2,
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.05),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  showSingUpBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25.0),
+        ),
+      ),
+      isScrollControlled: true,
+      context: context,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return SignUpBuilder();
+      },
+    );
+  }
+
+  showSignInBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25.0),
+        ),
+      ),
+      isScrollControlled: true,
+      context: context,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return SignInBuilder();
+      },
     );
   }
 }
@@ -482,20 +181,11 @@ class Header extends StatelessWidget {
         children: [
           RichText(
             text: const TextSpan(
-              text: 'NFT',
+              text: 'INCEPTHINK',
               style: TextStyle(
                   fontFamily: 'GothamPro',
                   fontWeight: FontWeight.w700,
                   fontSize: 36),
-              children: [
-                TextSpan(
-                  text: 'apparel',
-                  style: TextStyle(
-                      fontFamily: 'GothamPro',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 36),
-                ),
-              ],
             ),
           ),
           RichText(
@@ -537,6 +227,7 @@ class AvatarBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return AnimatedPositioned(
       curve: Curves.linear,
       // left: 60,
@@ -546,7 +237,7 @@ class AvatarBuilder extends StatelessWidget {
         colorFilter:
             ColorFilter.mode(Colors.black.withOpacity(0), BlendMode.srcOver),
         child: Container(
-          height: 486,
+          height: min(486, size.height * 0.5),
           width: 322,
           decoration: const BoxDecoration(
             image: DecorationImage(
@@ -567,15 +258,12 @@ class BackgroundWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColorFiltered(
-      colorFilter:
-          ColorFilter.mode(Colors.black.withOpacity(0), BlendMode.srcOver),
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
-            fit: BoxFit.cover,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xff082730), Color(0xff03161B)],
         ),
       ),
     );

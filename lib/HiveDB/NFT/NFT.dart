@@ -27,6 +27,9 @@ class NFT extends HiveObject {
   @HiveField(6)
   Merchandise merchandise;
 
+  @HiveField(7)
+  bool fromWallet;
+
   NFT({
     required this.id,
     required this.userID,
@@ -34,6 +37,7 @@ class NFT extends HiveObject {
     required this.createdAt,
     required this.updatedAt,
     required this.merchandise,
+    required this.fromWallet,
     this.number,
   });
 
@@ -46,6 +50,7 @@ class NFT extends HiveObject {
       updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
       merchandise: Merchandise.fromMap(data['merchandise']),
       number: data['number'] ?? -1,
+      fromWallet: false,
     );
   }
 
@@ -58,6 +63,7 @@ class NFT extends HiveObject {
       userID: -1,
       createdAt: DateTime.parse('2000-01-01 00:00:01'),
       number: -1,
+      fromWallet: true,
     );
   }
 

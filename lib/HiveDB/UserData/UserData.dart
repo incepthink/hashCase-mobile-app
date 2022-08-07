@@ -37,7 +37,10 @@ class UserData extends HiveObject {
   DateTime updatedAt;
 
   @HiveField(10)
-  List<NFT> myNFTList;
+  List<NFT> onChainNFTs;
+
+  @HiveField(10)
+  List<NFT> localNFTs;
 
   UserData({
     required this.token,
@@ -50,7 +53,8 @@ class UserData extends HiveObject {
     this.shippingID,
     this.username,
     this.walletAddress,
-    this.myNFTList = const [],
+    this.onChainNFTs = const [],
+    this.localNFTs = const [],
   });
 
   factory UserData.fromMetaMask(Map data) {

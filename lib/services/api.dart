@@ -114,23 +114,39 @@ class API {
     }
   }
 
-  static Future signUp(String email, String password) async {
-    final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/user/signup'),
-        body: {'email': email, 'password': password});
+  static Future<Result<Exception, bool>> signUp(
+      String email, String password) async {
+    try {
+      final globalBox = Hive.box('globalBox');
+      final uri = Uri.parse('${Endpoints.baseURL}/user/signup');
+      final response =
+          await http.post(uri, body: {'email': email, 'password': password});
+      final data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      // print('successs');
-      // print(response.body);
-      final res = jsonDecode(response.body);
-      // print(res['token']);
-      await StorageService.JWTStorage.write(key: 'JWT', value: res['token']);
-      await StorageService.userStorage
-          .write(key: 'user', value: res['user_instance']['id'].toString());
-      return response.body;
-    } else {
-      print(response.body);
-      throw Exception(response.body);
+      switch (response.statusCode) {
+        case 200:
+          if (globalBox.containsKey('userData')) globalBox.delete('userData');
+          final UserData userData = UserData.fromEmail(data);
+          await globalBox.put('userData', userData);
+          await StorageService.JWTStorage.write(
+              key: 'JWT', value: data['token']);
+          return const Success(true);
+        case 500:
+          String message;
+          switch (data["message"]) {
+            case "User already exist":
+              message = "User with the given credentials already exists!";
+              break;
+            default:
+              message = data["message"];
+          }
+          return Error(Exception(message));
+        default:
+          return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception, ${e.toString()}");
+      return Error(Exception("Something went wrong, please try again"));
     }
   }
 
@@ -147,7 +163,7 @@ class API {
     if (response.statusCode == 200) {
       print('===SUCCESS fetchEmailNfts===');
       List<NFT> localNFTs = [];
-      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      if (userData.localNFTs.isNotEmpty) localNFTs = userData.localNFTs;
       List<dynamic> data = jsonDecode(response.body);
       data.forEach((value) {
         NFT nft = NFT.fromEmail(value);
@@ -155,7 +171,7 @@ class API {
             localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
         if (preExistingNft == null) localNFTs.add(nft);
       });
-      userData.myNFTList = localNFTs;
+      userData.localNFTs = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
     } else {
@@ -168,11 +184,9 @@ class API {
   static Future fetchWalletNFTs() async {
     // var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-    print('jwtToken = $jwtToken');
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
     final address = userData.walletAddress;
-    print('wallet address --- $address');
     if (address == '-') {
       return;
     }
@@ -190,7 +204,7 @@ class API {
       // print(response.body);
       print('===SUCCESS fetchWalletNfts===');
       List<NFT> localNFTs = [];
-      if (userData.myNFTList.isNotEmpty) localNFTs = userData.myNFTList;
+      if (userData.onChainNFTs.isNotEmpty) localNFTs = userData.onChainNFTs;
       List<dynamic> data = await jsonDecode(response.body);
       data.forEach((value) {
         if (value != null) {
@@ -200,7 +214,7 @@ class API {
           if (preExistingNft == null) localNFTs.add(nft);
         }
       });
-      userData.myNFTList = localNFTs;
+      userData.onChainNFTs = localNFTs;
       await globalBox.put('userData', userData);
       return response.body;
       // return jsonDecode(response.body);
@@ -235,7 +249,7 @@ class API {
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
+      // print(response.body);
       return jsonDecode(response.body);
     } else {
       print(response.body);
