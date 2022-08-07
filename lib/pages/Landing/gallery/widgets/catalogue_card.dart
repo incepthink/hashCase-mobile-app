@@ -84,6 +84,7 @@ class CatalogueCard extends StatelessWidget {
                                 imageUrl: hcNFT.image,
                                 description: hcNFT.description,
                                 boldText: 'ID: ${hcNFT.id}',
+                                id: hcNFT.id,
                               );
                             },
                           );
