@@ -44,4 +44,24 @@ class SmartContractFunction {
     }
     return nftList;
   }
+
+  static Future balanceOfNFT(var contractAddr, var nftId) async {
+    String abiStringFile =
+        await rootBundle.loadString("SmartContract/nft_apparel_v2.abi.json");
+    final contract = DeployedContract(
+        ContractAbi.fromJson(abiStringFile, 'NftApparel'), contractAddr);
+    // print(contract);
+    final balanceOfNFT = contract.function('balanceOf');
+    var httpClient = Client();
+    var ethClient = Web3Client('https://polygon-rpc.com', httpClient);
+    final UserData userData = await Hive.box('globalBox').get('userData');
+    final address = userData.walletAddress;
+    // var address = await credentials.extractAddress();
+    var balance = await ethClient
+        .call(contract: contract, function: balanceOfNFT, params: [
+      EthereumAddress.fromHex(address!),
+      nftId
+    ]);
+    return balance;
+  }
 }
