@@ -3,23 +3,28 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hash_case/services/api.dart';
 
 import '../GlobalConstants.dart';
 
 class ProductInfoBuilder extends StatelessWidget {
-  const ProductInfoBuilder({
-    Key? key,
-    this.imageUrl,
-    required this.title,
-    required this.description,
-    required this.onPop,
-    this.boldText = '',
-  }) : super(key: key);
+  const ProductInfoBuilder(
+      {Key? key,
+      this.imageUrl,
+      required this.title,
+      required this.description,
+      required this.onPop,
+      this.boldText = '',
+      this.type = false,
+      this.id})
+      : super(key: key);
   final String description;
   final String? imageUrl;
   final VoidCallback onPop;
   final String boldText;
   final String title;
+  final bool type;
+  final id;
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -119,22 +124,28 @@ class ProductInfoBuilder extends StatelessWidget {
                   style: kTextStyleSecondary,
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.only(top: 20),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    gradient: kGradientG1),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset('assets/icons/cart.svg'),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Buy Now',
-                      style: kTextStyleH2,
-                    )
-                  ],
+              InkWell(
+                onTap: () async {
+                  API.claimToWallet(id);
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      gradient: kGradientG1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset('assets/icons/cart.svg'),
+                      const SizedBox(width: 10),
+                      if (type)
+                        const Text(
+                          'Buy Now',
+                          style: kTextStyleH2,
+                        )
+                    ],
+                  ),
                 ),
               )
             ],

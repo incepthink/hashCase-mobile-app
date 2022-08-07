@@ -23,12 +23,13 @@ class NFTCard extends StatelessWidget {
           backgroundColor: Colors.transparent,
           builder: (BuildContext context) {
             return ProductInfoBuilder(
-              onPop: Navigator.of(context).pop,
-              title: nft.merchandise.name,
-              imageUrl: nft.merchandise.imageURL,
-              description: nft.merchandise.description,
-              boldText: 'ID: ${nft.merchandise.id}',
-            );
+                onPop: Navigator.of(context).pop,
+                title: nft.merchandise.name,
+                imageUrl: nft.merchandise.imageURL,
+                description: nft.merchandise.description,
+                boldText: 'ID: ${nft.merchandise.id}',
+                id: nft.merchandise.id,
+                type: nft.fromWallet);
           },
         );
       },

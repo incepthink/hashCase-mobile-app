@@ -420,7 +420,7 @@ class API {
         body: jsonEncode(body));
 
     if (response.statusCode == 200) {
-      print(response.body);
+      print(jsonDecode(response.body).transactionHash);
       return const Success(true);
     } else {
       print(response.body);
