@@ -16,7 +16,7 @@ class SignInBuilder extends StatelessWidget {
   final _signInPasswordController = TextEditingController();
   final isLoadingEmail = ValueNotifier<bool>(false);
   final isLoadingMetamask = ValueNotifier<bool>(false);
-  final loginShowPassword = ValueNotifier(false);
+  final loginShowPassword = ValueNotifier(false); 
 
   _handleSingIn(context) async {
     isEmail(value) => RegExp(
@@ -261,12 +261,7 @@ class SignInBuilder extends StatelessWidget {
                       InkWell(
                         onTap: () async {
                           isLoadingMetamask.value = true;
-                          final ethMeta = await API.ethereumConnect();
-                          API
-                              .ethereumSign(
-                            ethMeta,
-                          )
-                              .then(
+                          await API.ethereumConnect().then(
                             (value) {
                               if (value) {
                                 Navigator.of(context).push(

@@ -285,7 +285,7 @@ class API {
     await StorageService.JWTStorage.deleteAll();
   }
 
-  static Future<EthereumMetadata> ethereumConnect() async {
+  static Future ethereumConnect() async {
     try {
       String _uri = '';
       final connector = WalletConnect(
@@ -309,14 +309,42 @@ class API {
           );
         },
       );
+      final provider = EthereumWalletConnectProvider(connector);
+      Future.delayed(const Duration(seconds: 1), () async {
+        await launchUrl(
+          Uri.parse(_uri),
+        );
+      });
+      final message = await API.getToken();
+      final signedBytes = await provider.personalSign(
+        message: message,
+        address: connector.session.accounts[0],
+        password: '',
+      );
 
       await StorageService.JWTStorage.write(
           key: 'wallet_address', value: connector.session.accounts[0]);
-      return EthereumMetadata(
-        address: connector.session.accounts[0],
-        uri: _uri,
-        connector: connector,
-      );
+      // if (signedBytes ) {
+      //   return await API.addWallet(ethMeta.address);
+      // }
+      var address = connector.session.accounts[0];
+      final verifiedMessage = await API.getVerifiedToken(address, signedBytes);
+      if (verifiedMessage == "Token verified") {
+        print('session is getting killed');
+        await connector.killSession();
+        return await API.metamaskLogin(address);
+      }
+      return Future.value(true);
+      // } catch (e) {
+      //   print('===ethereumSign ERROR===  ' + e.toString().substring(60));
+      //   showCustomSnackBar(text: e.toString().substring(60), color: kColorDanger);
+      //   return Future.value(false);
+      // }
+      // return EthereumMetadata(
+      //   address: connector.session.accounts[0],
+      //   uri: _uri,
+      //   connector: connector,
+      // );
     } catch (e) {
       showCustomSnackBar(text: e.toString().substring(23), color: kColorDanger);
       Uri metamaskDownloadLink = Uri.parse("https://metamask.io/download/");
