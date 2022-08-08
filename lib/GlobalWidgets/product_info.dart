@@ -3,26 +3,25 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:hash_case/HiveDB/UserData/UserData.dart';
+import 'package:hash_case/GlobalWidgets/custom_snackbar.dart';
 import 'package:hash_case/services/api.dart';
-import 'package:hash_case/services/smartContractFunctions.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import '../GlobalConstants.dart';
+import '../HiveDB/NFT/NFT.dart';
 
 class ProductInfoBuilder extends StatelessWidget {
-  const ProductInfoBuilder(
-      {Key? key,
-      this.imageUrl,
-      required this.title,
-      required this.description,
-      required this.onPop,
-      this.boldText = '',
-      this.contractAddress = '',
-      this.type = false,
-      this.nft,
-      this.id})
-      : super(key: key);
+  ProductInfoBuilder({
+    Key? key,
+    this.imageUrl,
+    required this.title,
+    required this.description,
+    required this.onPop,
+    this.boldText = '',
+    this.contractAddress = '',
+    this.type = false,
+    this.nft,
+    this.id,
+  }) : super(key: key);
   final String description;
   final String? imageUrl;
   final VoidCallback onPop;
@@ -30,8 +29,10 @@ class ProductInfoBuilder extends StatelessWidget {
   final String title;
   final String contractAddress;
   final bool type;
-  final id;
-  final nft;
+  final int? id;
+  final NFT? nft;
+
+  final isLoading = ValueNotifier<bool>(false);
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -100,46 +101,50 @@ class ProductInfoBuilder extends StatelessWidget {
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               const SizedBox(height: 20),
-              (!type)
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(
-                              Icons.star_half_rounded,
-                              color: Colors.yellowAccent,
-                            ),
-                            Text(
-                              '4.5',
-                              style: kTextStyleBody2,
-                            )
-                          ],
+              // (!type)
+              //     ?
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      // Icon(
+                      //   Icons.star_half_rounded,
+                      //   color: Colors.yellowAccent,
+                      // ),
+                      Visibility(
+                        visible: nft != null,
+                        child: Text(
+                          'Quantity: ${nft!.number}',
+                          style: kTextStyleBody2,
                         ),
-                        Text(
-                          boldText,
-                          style: kTextStyleH1,
-                        )
-                      ],
-                    )
-                  : FutureBuilder(
-                      future: SmartContractFunction()
-                          .balanceOfNFT(contractAddress, id),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Text(
-                            'Quantity: ${snapshot.data}',
-                            style: kTextStyleBody2,
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        }
-                        return const SizedBox(
-                            height: 30,
-                            width: 30,
-                            child: Center(child: CircularProgressIndicator()));
-                      }),
+                      )
+                    ],
+                  ),
+                  Text(
+                    boldText,
+                    style: kTextStyleH1,
+                  )
+                ],
+              ),
+              // : FutureBuilder(
+              //     future: SmartContractFunction()
+              //         .balanceOfNFT(contractAddress, id),
+              //     builder: (context, snapshot) {
+              //       if (snapshot.hasData) {
+              //         return Text(
+              //           'Quantity: ${snapshot.data}',
+              //           style: kTextStyleBody2,
+              //         );
+              //       }
+              //       if (snapshot.hasError) {
+              //         return Text('Error: ${snapshot.error}');
+              //       }
+              //       return const SizedBox(
+              //           height: 30,
+              //           width: 30,
+              //           child: Center(child: CircularProgressIndicator()));
+              //     }),
               const SizedBox(
                 height: 10,
               ),
@@ -153,34 +158,48 @@ class ProductInfoBuilder extends StatelessWidget {
               if (!type)
                 InkWell(
                   onTap: () async {
-                    print(nft.merchandise.id);
-                    await API.claimToWallet(nft.merchandise.id);
-                    final globalBox = Hive.box('globalBox');
-                    final UserData userData = globalBox.get('userData');
-                    var localNFTs = userData.localNFTs;
-                    localNFTs.remove(nft);
-                    userData.localNFTs = localNFTs;
-
-                    // await API.fetchEmailNFTs();
+                    isLoading.value = true;
+                    await API.claimToWallet(nft!).then((value) {
+                      isLoading.value = false;
+                      Navigator.of(context).pop();
+                      showCustomSnackBar(
+                          text: 'Successfully claimed NFT to onChain wallet',
+                          color: kColorSuccess);
+                    });
                   },
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        gradient: kGradientG1),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset('assets/icons/cart.svg'),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Buy Now',
-                          style: kTextStyleH2,
-                        )
-                      ],
-                    ),
-                  ),
+                  child: ValueListenableBuilder(
+                      valueListenable: isLoading,
+                      builder: (context, bool loading, child) {
+                        return Container(
+                          margin: const EdgeInsets.only(top: 20),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              gradient: kGradientG1),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: loading
+                                ? [
+                                    const SizedBox(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 3,
+                                      ),
+                                      height: 30,
+                                      width: 30,
+                                    )
+                                  ]
+                                : [
+                                    SvgPicture.asset('assets/icons/cart.svg'),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'Claim to OnChain Wallet',
+                                      style: kTextStyleH2,
+                                    )
+                                  ],
+                          ),
+                        );
+                      }),
                 )
             ],
           ),

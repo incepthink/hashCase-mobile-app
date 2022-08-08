@@ -45,7 +45,7 @@ class SignInBuilder extends StatelessWidget {
         text: exception.toString().substring(10),
         color: kColorDanger,
       ),
-      (value) => Navigator.of(context).push(
+      (value) => Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LandingPage()),
       ),
     );

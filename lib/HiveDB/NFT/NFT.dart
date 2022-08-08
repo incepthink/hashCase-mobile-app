@@ -54,7 +54,7 @@ class NFT extends HiveObject {
     );
   }
 
-  factory NFT.fromWallet(Map data) {
+  factory NFT.fromWallet(Map data, [int? number]) {
     return NFT(
       merchandise: Merchandise.fromMap(data),
       nftID: -1,
@@ -62,7 +62,7 @@ class NFT extends HiveObject {
       updatedAt: DateTime.parse('2000-01-01 00:00:01'),
       userID: -1,
       createdAt: DateTime.parse('2000-01-01 00:00:01'),
-      number: -1,
+      number: number ?? -1,
       fromWallet: true,
     );
   }
