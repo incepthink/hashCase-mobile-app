@@ -28,7 +28,9 @@ class NFTCard extends StatelessWidget {
                 imageUrl: nft.merchandise.imageURL,
                 description: nft.merchandise.description,
                 boldText: 'ID: ${nft.merchandise.id}',
-                id: nft.merchandise.id,
+                id: nft.merchandise.tokenID,
+                nft: nft,
+                contractAddress: nft.merchandise.contractAddress ?? '',
                 type: nft.fromWallet);
           },
         );

@@ -26,43 +26,45 @@ class Merchandise extends HiveObject {
   DateTime createdAt;
   @HiveField(9)
   DateTime updatedAt;
+  @HiveField(10)
+  String? contractAddress;
 
-  Merchandise({
-    required this.id,
-    required this.tokenID,
-    required this.claimable,
-    required this.imageURL,
-    required this.openseaLink,
-    required this.description,
-    required this.name,
-    required this.type,
-    required this.createdAt,
-    required this.updatedAt,
-  });
+  Merchandise(
+      {required this.id,
+      required this.tokenID,
+      required this.claimable,
+      required this.imageURL,
+      required this.openseaLink,
+      required this.description,
+      required this.name,
+      required this.type,
+      required this.createdAt,
+      required this.updatedAt,
+      this.contractAddress});
 
   factory Merchandise.fromMap(Map data) {
     return Merchandise(
-      id: data['id'] ?? -1,
-      tokenID: data['token_id'] ?? -1,
-      claimable: data['claimable'] != null
-          ? data['claimable'].runtimeType == int
-              ? data['claimable'] > 0
-                  ? true
-                  : false
-              : data['claimable']
-          : false,
-      imageURL: data['nft_image_url'] ?? '-',
-      openseaLink: data['opensea_link'] ?? '-',
-      description: data['description'] ?? '-',
-      name: data['name'] ?? '-',
-      type: data['type'] ?? '-',
-      createdAt: DateTime.parse(data['createdAt'] ?? '2000-01-01 00:00:01'),
-      updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
-    );
+        id: data['id'] ?? -1,
+        tokenID: data['token_id'] ?? -1,
+        claimable: data['claimable'] != null
+            ? data['claimable'].runtimeType == int
+                ? data['claimable'] > 0
+                    ? true
+                    : false
+                : data['claimable']
+            : false,
+        imageURL: data['nft_image_url'] ?? '-',
+        openseaLink: data['opensea_link'] ?? '-',
+        description: data['description'] ?? '-',
+        name: data['name'] ?? '-',
+        type: data['type'] ?? '-',
+        createdAt: DateTime.parse(data['createdAt'] ?? '2000-01-01 00:00:01'),
+        updatedAt: DateTime.parse(data['updatedAt'] ?? '2000-01-01 00:00:01'),
+        contractAddress: data['collection.contract_address'] ?? '-');
   }
 
   @override
   String toString() {
-    return 'Merchandise{id: $id, tokenID: $tokenID, claimable: $claimable, imageURL: $imageURL, openseaLink: $openseaLink, description: $description, name: $name, type: $type, createdAt: $createdAt, updatedAt: $updatedAt}';
+    return 'Merchandise{id: $id, tokenID: $tokenID, claimable: $claimable, imageURL: $imageURL, openseaLink: $openseaLink, description: $description, name: $name, type: $type, createdAt: $createdAt, updatedAt: $updatedAt,contractAddress: $contractAddress}';
   }
 }

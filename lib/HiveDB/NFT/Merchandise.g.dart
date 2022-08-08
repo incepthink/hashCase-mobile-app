@@ -27,13 +27,14 @@ class MerchandiseAdapter extends TypeAdapter<Merchandise> {
       type: fields[7] as String,
       createdAt: fields[8] as DateTime,
       updatedAt: fields[9] as DateTime,
+      contractAddress: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Merchandise obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class MerchandiseAdapter extends TypeAdapter<Merchandise> {
       ..writeByte(8)
       ..write(obj.createdAt)
       ..writeByte(9)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(10)
+      ..write(obj.contractAddress);
   }
 
   @override
