@@ -3,7 +3,10 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hash_case/HiveDB/UserData/UserData.dart';
 import 'package:hash_case/services/api.dart';
+import 'package:hash_case/services/smartContractFunctions.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../GlobalConstants.dart';
 
@@ -15,7 +18,9 @@ class ProductInfoBuilder extends StatelessWidget {
       required this.description,
       required this.onPop,
       this.boldText = '',
+      this.contractAddress = '',
       this.type = false,
+      this.nft,
       this.id})
       : super(key: key);
   final String description;
@@ -23,8 +28,10 @@ class ProductInfoBuilder extends StatelessWidget {
   final VoidCallback onPop;
   final String boldText;
   final String title;
+  final String contractAddress;
   final bool type;
   final id;
+  final nft;
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -71,7 +78,7 @@ class ProductInfoBuilder extends StatelessWidget {
                   SvgPicture.asset('assets/icons/bookmark_filled.svg')
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               if (["", '-', null].contains(imageUrl))
                 Image.asset(
                   'assets/avatars/avatar3.png',
@@ -93,27 +100,46 @@ class ProductInfoBuilder extends StatelessWidget {
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(
-                        Icons.star_half_rounded,
-                        color: Colors.yellowAccent,
-                      ),
-                      Text(
-                        '4.5',
-                        style: kTextStyleBody2,
-                      )
-                    ],
-                  ),
-                  Text(
-                    boldText,
-                    style: kTextStyleH1,
-                  )
-                ],
-              ),
+              (!type)
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.star_half_rounded,
+                              color: Colors.yellowAccent,
+                            ),
+                            Text(
+                              '4.5',
+                              style: kTextStyleBody2,
+                            )
+                          ],
+                        ),
+                        Text(
+                          boldText,
+                          style: kTextStyleH1,
+                        )
+                      ],
+                    )
+                  : FutureBuilder(
+                      future: SmartContractFunction()
+                          .balanceOfNFT(contractAddress, id),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Text(
+                            'Quantity: ${snapshot.data}',
+                            style: kTextStyleBody2,
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+                        return const SizedBox(
+                            height: 30,
+                            width: 30,
+                            child: Center(child: CircularProgressIndicator()));
+                      }),
               const SizedBox(
                 height: 10,
               ),
@@ -124,30 +150,38 @@ class ProductInfoBuilder extends StatelessWidget {
                   style: kTextStyleSecondary,
                 ),
               ),
-              InkWell(
-                onTap: () async {
-                  API.claimToWallet(id);
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(top: 20),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      gradient: kGradientG1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset('assets/icons/cart.svg'),
-                      const SizedBox(width: 10),
-                      if (type)
+              if (!type)
+                InkWell(
+                  onTap: () async {
+                    print(nft.merchandise.id);
+                    await API.claimToWallet(nft.merchandise.id);
+                    final globalBox = Hive.box('globalBox');
+                    final UserData userData = globalBox.get('userData');
+                    var localNFTs = userData.localNFTs;
+                    localNFTs.remove(nft);
+                    userData.localNFTs = localNFTs;
+
+                    // await API.fetchEmailNFTs();
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        gradient: kGradientG1),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/icons/cart.svg'),
+                        const SizedBox(width: 10),
                         const Text(
                           'Buy Now',
                           style: kTextStyleH2,
                         )
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              )
+                )
             ],
           ),
         ),

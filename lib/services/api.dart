@@ -163,6 +163,7 @@ class API {
     if (response.statusCode == 200) {
       print('===SUCCESS fetchEmailNfts===');
       List<NFT> localNFTs = [];
+      print('these are the NFTs--${response.body}');
       if (userData.localNFTs.isNotEmpty) localNFTs = userData.localNFTs;
       List<dynamic> data = jsonDecode(response.body);
       data.forEach((value) {
@@ -203,6 +204,7 @@ class API {
     if (response.statusCode == 200) {
       // print(response.body);
       print('===SUCCESS fetchWalletNfts===');
+      print('these are the wallet NFTs--${response.body}');
       List<NFT> localNFTs = [];
       if (userData.onChainNFTs.isNotEmpty) localNFTs = userData.onChainNFTs;
       List<dynamic> data = await jsonDecode(response.body);
@@ -349,6 +351,7 @@ class API {
       final verifiedMessage =
           await API.getVerifiedToken(ethMeta.address, signedBytes);
       if (verifiedMessage == "Token verified") {
+        print('session is getting killed');
         await ethMeta.connector.killSession();
         return await API.metamaskLogin(ethMeta.address);
       }
@@ -404,10 +407,11 @@ class API {
   }
 
   static Future<Result<Exception, bool>> claimToWallet(var productId) async {
-    var address = await StorageService.JWTStorage.read(key: 'wallet_address');
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
+    final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
     final userId = userData.id;
+    var address = userData.walletAddress;
     var body = {
       'user_id': userId,
       'nft_id': productId,
@@ -417,10 +421,14 @@ class API {
     // if(){}
     final response = await http.post(
         Uri.parse('${Endpoints.baseURL}/localnft/claimtowallet'),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $jwtToken',
+        },
         body: jsonEncode(body));
 
     if (response.statusCode == 200) {
-      print(jsonDecode(response.body).transactionHash);
+      print('===successfully claimed NFT===');
       return const Success(true);
     } else {
       print(response.body);
