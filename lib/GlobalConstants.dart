@@ -47,6 +47,7 @@ BoxDecoration kDebugDecoration =
 
 const Color kColorCta = Color(0xff13B1E6);
 const Color kColorDanger = Color(0xffff6961);
+const Color kColorSuccess = Color(0xff00A86B);
 const Color kColorGreySecondary = Color(0xffCCCCCC);
 
 const LinearGradient kGradientG1 = LinearGradient(colors: [

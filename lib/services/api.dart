@@ -162,17 +162,22 @@ class API {
     );
     if (response.statusCode == 200) {
       print('===SUCCESS fetchEmailNfts===');
-      List<NFT> localNFTs = [];
-      print('these are the NFTs--${response.body}');
-      if (userData.localNFTs.isNotEmpty) localNFTs = userData.localNFTs;
-      List<dynamic> data = jsonDecode(response.body);
-      data.forEach((value) {
+      final List newNFTs = jsonDecode(response.body);
+      print(newNFTs);
+      List<int> oldNFTIDs = userData.localNFTs.map((NFT e) => e.nftID).toList();
+      List<NFT> finalNFTs = [];
+      finalNFTs.addAll(userData.localNFTs);
+      newNFTs.forEach((value) {
         NFT nft = NFT.fromEmail(value);
-        var preExistingNft =
-            localNFTs.firstWhereOrNull((element) => element.nftID == nft.nftID);
-        if (preExistingNft == null) localNFTs.add(nft);
+        if (!oldNFTIDs.contains(nft.nftID)) {
+          finalNFTs.add(nft);
+        }
+        oldNFTIDs.removeWhere((id) => id == nft.nftID);
       });
-      userData.localNFTs = localNFTs;
+      oldNFTIDs.forEach((int id) {
+        finalNFTs.removeWhere((NFT nft) => nft.nftID == id);
+      });
+      userData.localNFTs = finalNFTs;
       await globalBox.put('userData', userData);
       return response.body;
     } else {
@@ -202,21 +207,72 @@ class API {
         body: jsonEncode(token));
 
     if (response.statusCode == 200) {
-      // print(response.body);
       print('===SUCCESS fetchWalletNfts===');
-      print('these are the wallet NFTs--${response.body}');
-      List<NFT> localNFTs = [];
-      if (userData.onChainNFTs.isNotEmpty) localNFTs = userData.onChainNFTs;
-      List<dynamic> data = await jsonDecode(response.body);
-      data.forEach((value) {
+      // print('these are the wallet NFTs--${response.body}');
+      List<dynamic> newNFTs = await jsonDecode(response.body);
+      List<List<int>> oldNFTIDs = userData.onChainNFTs
+          .map((NFT nft) => [nft.merchandise.id, nft.number!])
+          .toList();
+      print('old nfts $oldNFTIDs');
+      List<NFT> finalNFTs = [];
+      finalNFTs.addAll(userData.onChainNFTs);
+      newNFTs.forEach((value) async {
         if (value != null) {
-          NFT nft = NFT.fromWallet(value);
-          var preExistingNft = localNFTs.firstWhereOrNull(
-              (element) => element.merchandise.id == nft.merchandise.id);
-          if (preExistingNft == null) localNFTs.add(nft);
+          int number = -1;
+          try {
+            final num = await SmartContractFunction().balanceOfNFT(
+                value['collection.contract_address'], value['token_id']);
+            number = num.toDouble().round();
+          } catch (e) {
+            print("error fetching quantity");
+            print(e);
+          }
+          print(value);
+          NFT nft = NFT.fromWallet(value, number);
+          print('got nft ${nft.merchandise.id} with number ${nft.number}');
+          //IF NFT IS NEW, ADD IT TO FINAL NFT LIST
+          if (finalNFTs.firstWhereOrNull((NFT oldNFT) =>
+                  oldNFT.merchandise.id == nft.merchandise.id &&
+                  oldNFT.number == nft.number) ==
+              null) {
+            print('serched for ${[
+              nft.merchandise.id,
+              nft.number
+            ]} in $finalNFTs');
+            print('got new nft');
+            finalNFTs.add(nft);
+          }
+          //IF NFT IS OLD BUT NUMBER HAS CHANGED, KEEP THE OLD ONE IN OLDNFTS LIST AND ADD NEW ONE
+          //TO FINAL LIST
+          else if ((finalNFTs.firstWhereOrNull((NFT oldNFT) =>
+                  oldNFT.merchandise.id == nft.merchandise.id &&
+                  oldNFT.number != nft.number) !=
+              null)) {
+            print('got old nft with new number');
+            finalNFTs.add(nft);
+          }
+          //IF NFT IS OLD, REMOVE FROM OLDNFTS LIST
+          else if (finalNFTs.firstWhereOrNull((NFT oldNFT) =>
+                  oldNFT.merchandise.id == nft.merchandise.id &&
+                  oldNFT.number == nft.number) !=
+              null) {
+            print('got old nft');
+            oldNFTIDs.removeWhere((idNum) =>
+                idNum[0] == nft.merchandise.id && idNum[1] == nft.number);
+          } else {
+            print('unhandled case');
+          }
         }
       });
-      userData.onChainNFTs = localNFTs;
+      print(oldNFTIDs);
+      print(finalNFTs
+          .map((NFT nft) => [nft.merchandise.id, nft.number!])
+          .toList());
+      oldNFTIDs.forEach((idNum) {
+        finalNFTs.removeWhere((NFT nft) =>
+            nft.merchandise.id == idNum[0] && nft.number == idNum[1]);
+      });
+      userData.onChainNFTs = finalNFTs;
       await globalBox.put('userData', userData);
       return response.body;
       // return jsonDecode(response.body);
@@ -406,33 +462,40 @@ class API {
     }
   }
 
-  static Future<Result<Exception, bool>> claimToWallet(var productId) async {
+  static Future<Result<Exception, bool>> claimToWallet(NFT nft) async {
     final globalBox = Hive.box('globalBox');
     final UserData userData = globalBox.get('userData');
     final jwtToken = await StorageService.JWTStorage.read(key: 'JWT');
-    final userId = userData.id;
-    var address = userData.walletAddress;
     var body = {
-      'user_id': userId,
-      'nft_id': productId,
-      'wallet_address': address,
+      'user_id': userData.id,
+      'nft_id': nft.merchandise.id,
+      'wallet_address': userData.walletAddress,
       'toDelete': false
     };
-    // if(){}
     final response = await http.post(
-        Uri.parse('${Endpoints.baseURL}/localnft/claimtowallet'),
-        headers: {
-          "Content-Type": "application/json",
-          'Authorization': 'Bearer $jwtToken',
-        },
-        body: jsonEncode(body));
-
-    if (response.statusCode == 200) {
-      print('===successfully claimed NFT===');
-      return const Success(true);
-    } else {
-      print(response.body);
-      throw Exception(response.body);
+      Uri.parse('${Endpoints.baseURL}/localnft/claimtowallet'),
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode(body),
+    );
+    final data = json.decode(response.body);
+    try {
+      switch (response.statusCode) {
+        case 200:
+          var localNFTs = userData.localNFTs;
+          localNFTs.remove(nft);
+          userData.localNFTs = localNFTs;
+          globalBox.put('userData', userData);
+          print('===successfully claimed NFT===');
+          return const Success(true);
+        default:
+          return Error(Exception(data["message"]));
+      }
+    } catch (e) {
+      debugPrint("Unhandled Exception");
+      return Error(Exception(e.toString()));
     }
   }
 

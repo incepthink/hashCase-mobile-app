@@ -94,7 +94,7 @@ class NFTsBuilder extends StatefulWidget {
 
 class _NFTsBuilderState extends State<NFTsBuilder> {
   final globalBox = Hive.box('globalBox');
-  final ValueNotifier isLoading = ValueNotifier(true);
+  final ValueNotifier<bool> isLoading = ValueNotifier(true);
 
   @override
   void initState() {
@@ -104,8 +104,11 @@ class _NFTsBuilderState extends State<NFTsBuilder> {
 
   _getData() async {
     isLoading.value = true;
-    await API.fetchEmailNFTs();
-    await API.fetchWalletNFTs();
+    if (widget.onChain) {
+      await API.fetchWalletNFTs();
+    } else {
+      await API.fetchEmailNFTs();
+    }
     isLoading.value = false;
   }
 
@@ -120,12 +123,14 @@ class _NFTsBuilderState extends State<NFTsBuilder> {
             : widget.onChain
                 ? userData.onChainNFTs
                 : userData.localNFTs;
-        if (userData == null) {}
+        if (userData == null) {
+          return const SizedBox();
+        }
         if (myNFTList.isEmpty) {
           return ValueListenableBuilder(
             valueListenable: isLoading,
-            builder: (context, value, child) {
-              if (isLoading.value) {
+            builder: (context, bool loading, child) {
+              if (loading) {
                 return Column(
                   children: const [
                     Padding(
