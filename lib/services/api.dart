@@ -9,7 +9,6 @@ import 'package:hash_case/services/storageService.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:collection/collection.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:walletconnect_dart/walletconnect_dart.dart';
 import 'package:multiple_result/multiple_result.dart';
@@ -210,13 +209,11 @@ class API {
       print('===SUCCESS fetchWalletNfts===');
       // print('these are the wallet NFTs--${response.body}');
       List<dynamic> newNFTs = await jsonDecode(response.body);
-      List<List<int>> oldNFTIDs = userData.onChainNFTs
-          .map((NFT nft) => [nft.merchandise.id, nft.number!])
-          .toList();
-      print('old nfts $oldNFTIDs');
+      List<int> oldNFTIDs =
+          userData.onChainNFTs.map((NFT e) => e.merchandise.id).toList();
       List<NFT> finalNFTs = [];
       finalNFTs.addAll(userData.onChainNFTs);
-      newNFTs.forEach((value) async {
+      for (var value in newNFTs) {
         if (value != null) {
           int number = -1;
           try {
@@ -227,51 +224,20 @@ class API {
             print("error fetching quantity");
             print(e);
           }
-          print(value);
           NFT nft = NFT.fromWallet(value, number);
-          print('got nft ${nft.merchandise.id} with number ${nft.number}');
-          //IF NFT IS NEW, ADD IT TO FINAL NFT LIST
-          if (finalNFTs.firstWhereOrNull((NFT oldNFT) =>
-                  oldNFT.merchandise.id == nft.merchandise.id &&
-                  oldNFT.number == nft.number) ==
-              null) {
-            print('serched for ${[
-              nft.merchandise.id,
-              nft.number
-            ]} in $finalNFTs');
-            print('got new nft');
+          finalNFTs.removeWhere(
+              (NFT oldNFT) => oldNFT.merchandise.id == nft.merchandise.id);
+          if (!finalNFTs.contains(nft)) {
             finalNFTs.add(nft);
           }
-          //IF NFT IS OLD BUT NUMBER HAS CHANGED, KEEP THE OLD ONE IN OLDNFTS LIST AND ADD NEW ONE
-          //TO FINAL LIST
-          else if ((finalNFTs.firstWhereOrNull((NFT oldNFT) =>
-                  oldNFT.merchandise.id == nft.merchandise.id &&
-                  oldNFT.number != nft.number) !=
-              null)) {
-            print('got old nft with new number');
-            finalNFTs.add(nft);
-          }
-          //IF NFT IS OLD, REMOVE FROM OLDNFTS LIST
-          else if (finalNFTs.firstWhereOrNull((NFT oldNFT) =>
-                  oldNFT.merchandise.id == nft.merchandise.id &&
-                  oldNFT.number == nft.number) !=
-              null) {
-            print('got old nft');
-            oldNFTIDs.removeWhere((idNum) =>
-                idNum[0] == nft.merchandise.id && idNum[1] == nft.number);
-          } else {
-            print('unhandled case');
-          }
+          oldNFTIDs.removeWhere((int id) => id == nft.merchandise.id);
         }
+      }
+      oldNFTIDs.forEach((int id) {
+        finalNFTs.removeWhere((NFT nft) => nft.merchandise.id == id);
       });
-      print(oldNFTIDs);
-      print(finalNFTs
-          .map((NFT nft) => [nft.merchandise.id, nft.number!])
-          .toList());
-      oldNFTIDs.forEach((idNum) {
-        finalNFTs.removeWhere((NFT nft) =>
-            nft.merchandise.id == idNum[0] && nft.number == idNum[1]);
-      });
+      userData.onChainNFTs = finalNFTs;
+      await globalBox.put('userData', userData);
       userData.onChainNFTs = finalNFTs;
       await globalBox.put('userData', userData);
       return response.body;
